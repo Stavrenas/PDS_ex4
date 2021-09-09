@@ -1,189 +1,84 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "utilities.h"
+#include "controller.h"
 #include "read.h"
+#include "mmio.h"
 
-double *read_corel(int *n, int *d, char *file_path){
+void processMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_path)
+{
 
-    FILE *matFile;
-    matFile = fopen(file_path, "r");
-    if (matFile == NULL){
-        printf("Could not open file %s",file_path);
-        exit(-1);
+    int ret_code;
+    MM_typecode matcode;
+    FILE *f;
+    int M, N, nz;
+    uint32_t i, *I, *J;
+    double *val;
+
+    if ((f = fopen(file_path, "r")) == NULL)
+        exit(1);
+
+    if (mm_read_banner(f, &matcode) != 0)
+    {
+        printf("Could not process Matrix Market banner.\n");
+        exit(1);
     }
 
-    double *X;
-    if(strstr(file_path,"ColorH") != NULL){
-        *n = 68040;
-        *d = 32;
-    }else if(strstr(file_path,"ColorM") != NULL){
-        *n = 68040;
-        *d = 9;
-    }else{
-        *n = 68040;
-        *d = 16;
+    if (mm_is_complex(matcode) && mm_is_matrix(matcode) &&
+        mm_is_sparse(matcode))
+    {
+        printf("Sorry, this application does not support ");
+        printf("Market Market type: [%s]\n", mm_typecode_to_str(matcode));
+        exit(1);
     }
 
-    X = (double *)malloc((*n) * (*d) * sizeof(double));
+    /* find out size of sparse matrix .... */
 
-    for(int i=0; i<*n; i++){
-        int row;
-        int got = fscanf(matFile, "%d", &row);
-        for(int j=0; j<*d; j++){
-            int got = fscanf(matFile, "%lf", &X[i * (*d) + j]);
-            if(got != 1){
-                printf("Error reading\n");
-                exit(-2);
-            }
+    if ((ret_code = mm_read_mtx_crd_size(f, &M, &N, &nz)) != 0)
+        exit(1);
+
+    /* reseve memory for matrices */
+
+    I = (uint32_t *)malloc(nz * sizeof(uint32_t));
+    J = (uint32_t *)malloc(nz * sizeof(uint32_t));
+    val = (double *)malloc(nz * sizeof(double));
+
+    for (i = 0; i < nz; i++)
+    {
+        fscanf(f, "%d %d", &I[i], &J[i]);
+        I[i]--; /* adjust from 1-based to 0-based */
+        J[i]--;
+    }
+
+    if (f != stdin)
+        fclose(f);
+
+    /************************/
+    /* now write out matrix */
+    /************************/
+
+    //mm_write_banner(stdout, matcode);
+    //mm_write_mtx_crd_size(stdout, M, N, nz);
+    //Up to this point, I[] cointains row index and J[] column index for the nonzero elements
+    /*for (i=0; i<nz; i++)
+        {
+             fprintf(stdout, "%d %d\n", I[i]+1, J[i]+1);
+             printf("%d %d\n", I[i]+1, J[i]+1);
         }
-    }
+		*/
 
-    fclose(matFile);
+    const uint32_t nnz = nz;
 
-    return X;
-}
+    printf("M is %d, nnz is %d\n", M, nnz);
+    uint32_t *csc_row = (uint32_t *)malloc(nnz * sizeof(uint32_t));
+    uint32_t *csc_col = (uint32_t *)malloc((M + 1) * sizeof(uint32_t));
+    uint32_t isOneBased = 0;
 
-double *read_mini(int *n, int *d, char *file_path){
+    // Call coo2csc for isOneBase false
+    coo2csc(csc_row, csc_col, I, J, nnz, M, isOneBased);
 
-    FILE *matFile;
-    matFile = fopen(file_path, "r");
-    if (matFile == NULL){
-        printf("Could not open file %s",file_path);
-        exit(-1);
-    }
-    
-    double *X;
-    *n = 130064;
-    *d = 50;
-
-    X = (double *)malloc((*n) * (*d) * sizeof(double));
-    
-    int temp;
-    for(int i=0; i<2; i++){
-        int got = fscanf(matFile, "%d", &temp);
-    }
-
-    for(int i=0; i<*n; i++){
-        for(int j=0; j<*d; j++){
-            int got = fscanf(matFile, "%lf", &X[i * (*d) + j]);
-            if(got != 1){
-                printf("Error reading\n");
-                exit(-2);
-            }
-        }
-    }
-
-    fclose(matFile);
-
-    return X;
-}
-
-double *read_features(int *n, int *d, char *file_path){
-
-    FILE *matFile;
-    matFile = fopen(file_path, "r");
-    if (matFile == NULL){
-        printf("Could not open file %s",file_path);
-        exit(-1);
-    }
-    
-    char *line = (char *)malloc(1024 * 1024);
-
-    for(int skip=0;skip<4;skip++){
-        int got = fscanf(matFile,"%s\n", line);
-    }
-    free(line);
-
-    double *X;
-    *n = 106574;
-    *d = 518;
-
-    X = (double *)malloc((*n) * (*d) * sizeof(double));
-
-    int temp;    
-    for(int i=0; i<*n; i++){
-        int got = fscanf(matFile,"%d,",&temp);
-        for(int j=0; j<*d; j++){
-            int got = fscanf(matFile,"%lf,",&X[i * (*d) + j]);
-            if(got != 1){
-                printf("Error reading\n");
-                exit(-2);
-            }
-        }
-    }
- 
-    fclose(matFile);
-    return X;
-}
-
-double *read_tv(int *n, int *d, char *file_path){
-
-    FILE *matFile;
-    matFile = fopen(file_path, "r");
-    if (matFile == NULL){
-        printf("Could not open file %s",file_path);
-        exit(-1);
-    }
-    
-    double *X;
-    if(strstr(file_path,"BBC") != NULL){
-        *n = 17720;
-    }else if(strstr(file_path,"CNN.") != NULL){
-        *n = 22545;
-    }else if(strstr(file_path,"CNNI") != NULL){
-        *n = 33117;
-    }else if(strstr(file_path,"NDTV") != NULL){
-        *n = 17051;
-    }else if(strstr(file_path,"TIMES") != NULL){
-        *n = 39252;
-    }
-    *d = 17;
-
-    X = (double *)malloc((*n) * (*d) * sizeof(double));
-
-    int temp;
-    double val;
-    int got = fscanf(matFile, "%d", &temp);
-    for(int i=0; i<*n; i++){
-        for(int j=0; j<*d; j++){
-            int got = fscanf(matFile, "%d:%lf", &temp, &val);
-            if(got != 2){
-                break;
-            }
-            X[i * (*d) + j] = val;
-        }
-        while(1){
-            int got = fscanf(matFile, "%d:%lf", &temp, &val);
-            if(got != 2){
-                break;
-            }
-        }
-    }
-
-    fclose(matFile);
-
-    return X;
-}
-
-double *read_X(int *n, int *d, char *file_path){
-    double *X;
-    
-    if(strstr(file_path,"Co") != NULL){
-        X = read_corel(n, d, file_path);
-    }else if(strstr(file_path,"Mini") != NULL){
-        X = read_mini(n, d, file_path);
-    }else if(strstr(file_path,"feat") != NULL){
-        X = read_features(n, d, file_path);
-    }else if(strstr(file_path,"BBC") != NULL ||
-            strstr(file_path,"CNN.") != NULL ||
-            strstr(file_path,"CNNI") != NULL ||
-            strstr(file_path,"NDTV") != NULL ||
-            strstr(file_path,"TIMES") != NULL){
-        X = read_tv(n, d, file_path);
-    }else{
-        printf("Don't know how to read this File\n");
-        exit(2);
-    }
-    
-    return X;
+    *n = M; //from  mm_read_mtx_crd_size(f, &M, &N, &nz)
+    csc_rowOut = csc_row;
+    csc_colOut = csc_col;
 }

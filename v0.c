@@ -6,8 +6,32 @@
 #include "utilities.h"
 #include "controller.h"
 #include "read.h"
+#include "mmio.h"
 
 int main(int argc, char** argv) {
+
+char filename[] = "";
+uint32_t *n, *csc_row, *csc_col;
+
+processMatrix(csc_row,csc_col,n,filename);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
