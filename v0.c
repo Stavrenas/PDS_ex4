@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 char filename[] = "";
 uint32_t *n, *csc_row, *csc_col;
 
-processMatrix(csc_row,csc_col,n,filename);
+readMatrix(csc_row,csc_col,n,filename);
 
 
 

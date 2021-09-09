@@ -20,6 +20,7 @@ void runAndPresentResult(void (*runnable)(double *x, int n, int d, int k), doubl
     MPI_Comm_size(MPI_COMM_WORLD, &NumTasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &SelfTID);
     double time; // = run function
+    
     if (SelfTID == 0) {
         double maxTime = time;
         for (int i = 1; i < NumTasks; i++) {

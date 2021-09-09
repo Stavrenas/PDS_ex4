@@ -6,7 +6,7 @@
 #include "read.h"
 #include "mmio.h"
 
-void processMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_path)
+void readMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_path)
 {
 
     int ret_code;
@@ -82,3 +82,51 @@ void processMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file
     csc_rowOut = csc_row;
     csc_colOut = csc_col;
 }
+
+void coo2csc(
+    uint32_t       * const row,       /*!< CSC row start indices */
+    uint32_t       * const col,       /*!< CSC column indices */
+    uint32_t const * const row_coo,   /*!< COO row indices */
+    uint32_t const * const col_coo,   /*!< COO column indices */
+    uint32_t const         nnz,       /*!< Number of nonzero elements */
+    uint32_t const         n,         /*!< Number of rows/columns */
+    uint32_t const         isOneBased /*!< Whether COO is 0- or 1-based */
+)
+{
+
+    for (uint32_t l = 0; l < n+1; l++) col[l] = 0;
+
+
+    for (uint32_t l = 0; l < nnz; l++)
+        col[col_coo[l] - isOneBased]++;
+
+    // ----- cumulative sum
+    for (uint32_t i = 0, cumsum = 0; i < n; i++)
+    {
+        uint32_t temp = col[i];
+        col[i] = cumsum;
+        cumsum += temp;
+    }
+    col[n] = nnz;
+    // ----- copy the row indices to the correct place
+    for (uint32_t l = 0; l < nnz; l++)
+    {
+        uint32_t col_l;
+        col_l = col_coo[l] - isOneBased;
+
+        uint32_t dst = col[col_l];
+        row[dst] = row_coo[l]+1;
+
+        col[col_l]++;
+    }
+    // ----- revert the column pointers
+    for (uint32_t i = 0, last = 0; i < n; i++)
+    {
+        uint32_t temp = col[i];
+        col[i] = last;
+        last = temp;
+    }
+
+}
+
+	
