@@ -1,7 +1,7 @@
 CC=gcc
 MPICC=mpicc
-CFLAGS=-O3
-CBLAS=-lopenblas -lpthread -lm
+CFLAGS=-O3 -lpthread -lm
+MP=-fopenmp 
 N=2
 
 default: all
@@ -9,7 +9,10 @@ default: all
 all: v0
 
 v0: v0.c utilities.c read.c controller.c
-	$(CC) $(CFLAGS) $(CBLAS) -o $@ $^
+	$(MPICC) $(CFLAGS) -o $@ $^
+
+run:
+	mpirun -np $(np) ./v0
 
 clean:
 	rm -f v0 v1 v2
