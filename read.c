@@ -44,9 +44,10 @@ void readMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_pa
     J = (uint32_t *)malloc(nz * sizeof(uint32_t));
     val = (double *)malloc(nz * sizeof(double));
 
+    int temp; //to supress the warning
     for (i = 0; i < nz; i++)
     {
-        fscanf(f, "%d %d", &I[i], &J[i]);
+        temp = fscanf(f, "%d %d", &I[i], &J[i]);
         I[i]--; /* adjust from 1-based to 0-based */
         J[i]--;
     }

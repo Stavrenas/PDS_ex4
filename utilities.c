@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <math.h>  // sqrt
 #include <float.h>
+#include <time.h>
+#include <sys/time.h>
 #include "utilities.h"
 #include "mmio.h"
 
