@@ -1,5 +1,6 @@
 # Object files
 *.o
 *.mtx
-*.md
 /.vscode
+v0
+test

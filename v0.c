@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>  // sqrt
+#include <math.h> // sqrt
 #include <mpi.h>
 #include <string.h>
 #include "utilities.h"
@@ -8,30 +8,8 @@
 #include "read.h"
 #include "mmio.h"
 
-int main(int argc, char** argv) {
-
-char filename[] = "";
-uint32_t *n, *csc_row, *csc_col;
-
-readMatrix(csc_row,csc_col,n,filename);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int main(int argc, char **argv)
+{
     // Initialize the MPI environment
     MPI_Init(NULL, NULL);
 
@@ -48,9 +26,22 @@ readMatrix(csc_row,csc_col,n,filename);
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
+    printf("\n");
+    char filename[] = "12.mtx";
+    uint32_t *csc_row, *csc_col;
+    int n, nnz;
+
+    readMatrix(&csc_row, &csc_col, &n, filename);
+    printf("\n");
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int i1 = csc_col[i - 1]; i1 < csc_col[i]; i1++)
+            printf("%d ", csc_row[i1]);
+    }
+
     // Print off a hello world message
-    printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, world_rank, world_size);
+    //printf("Hello world from processor %s, rank %d out of %d processors\n",processor_name, world_rank, world_size);
 
     // Finalize the MPI environment.
     MPI_Finalize();

@@ -6,7 +6,7 @@
 #include "read.h"
 #include "mmio.h"
 
-void readMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_path)
+void readMatrix(uint32_t **csc_rowOut, uint32_t **csc_colOut, int *n, char *file_path)
 {
 
     int ret_code;
@@ -79,24 +79,27 @@ void readMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_pa
     // Call coo2csc for isOneBase false
     coo2csc(csc_row, csc_col, I, J, nnz, M, isOneBased);
 
-    *n = M; //from  mm_read_mtx_crd_size(f, &M, &N, &nz)
-    csc_rowOut = csc_row;
-    csc_colOut = csc_col;
+    *n = M;
+
+    *csc_rowOut = csc_row;
+
+    *csc_colOut = csc_col;
+
 }
 
 void coo2csc(
-    uint32_t       * const row,       /*!< CSC row start indices */
-    uint32_t       * const col,       /*!< CSC column indices */
-    uint32_t const * const row_coo,   /*!< COO row indices */
-    uint32_t const * const col_coo,   /*!< COO column indices */
-    uint32_t const         nnz,       /*!< Number of nonzero elements */
-    uint32_t const         n,         /*!< Number of rows/columns */
-    uint32_t const         isOneBased /*!< Whether COO is 0- or 1-based */
+    uint32_t *const row,           /*!< CSC row start indices */
+    uint32_t *const col,           /*!< CSC column indices */
+    uint32_t const *const row_coo, /*!< COO row indices */
+    uint32_t const *const col_coo, /*!< COO column indices */
+    uint32_t const nnz,            /*!< Number of nonzero elements */
+    uint32_t const n,              /*!< Number of rows/columns */
+    uint32_t const isOneBased      /*!< Whether COO is 0- or 1-based */
 )
 {
 
-    for (uint32_t l = 0; l < n+1; l++) col[l] = 0;
-
+    for (uint32_t l = 0; l < n + 1; l++)
+        col[l] = 0;
 
     for (uint32_t l = 0; l < nnz; l++)
         col[col_coo[l] - isOneBased]++;
@@ -116,7 +119,7 @@ void coo2csc(
         col_l = col_coo[l] - isOneBased;
 
         uint32_t dst = col[col_l];
-        row[dst] = row_coo[l]+1;
+        row[dst] = row_coo[l] + 1;
 
         col[col_l]++;
     }
@@ -127,7 +130,4 @@ void coo2csc(
         col[i] = last;
         last = temp;
     }
-
 }
-
-	

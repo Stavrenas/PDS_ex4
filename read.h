@@ -1,7 +1,8 @@
 #ifndef READ_H
 #define READ_H
 
-void readMatrix(uint32_t *csc_rowOut, uint32_t *csc_colOut, int *n,char *file_path);
+
+void readMatrix(uint32_t **csc_rowOut, uint32_t **csc_colOut, int *n, char *file_path);
 
 void coo2csc(
     uint32_t       * const row,       /*!< CSC row start indices */

@@ -10,7 +10,8 @@ all: v0
 
 v0: v0.c utilities.c read.c controller.c mmio.c
 	$(MPICC) $(CFLAGS) -o $@ $^
-
+test: test.c utilities.c read.c controller.c mmio.c
+	$(MPICC) $(CFLAGS) -o $@ $^
 run:
 	mpirun -np $(np) ./v0
 
