@@ -28,17 +28,21 @@ int main(int argc, char **argv)
 
     printf("\n");
     char filename[] = "12.mtx";
-    uint32_t *csc_row, *csc_col;
+    uint32_t *csc_row, *csc_col;  //csc_col[i] -> total elements up to ith row | csc_row[i] -> column index of ith element
     int n, nnz;
 
     readMatrix(&csc_row, &csc_col, &n, filename);
+    nnz = csc_col[n-1];
     printf("\n");
 
-    for (int i = 1; i <= n; i++)
+    for (int row = 1; row <= n; row++) 
     {
-        for (int i1 = csc_col[i - 1]; i1 < csc_col[i]; i1++)
-            printf("%d ", csc_row[i1]);
+        for (int i1 = csc_col[row - 1]; i1 < csc_col[row]; i1++)   //csc_row[i1] -> column
+            printf("(%d ,%d) ", csc_row[i1], row);
+            printf("\n");
+
     }
+
 
     // Print off a hello world message
     //printf("Hello world from processor %s, rank %d out of %d processors\n",processor_name, world_rank, world_size);
@@ -46,3 +50,4 @@ int main(int argc, char **argv)
     // Finalize the MPI environment.
     MPI_Finalize();
 }
+
