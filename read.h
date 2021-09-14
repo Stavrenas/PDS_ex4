@@ -1,8 +1,15 @@
 #ifndef READ_H
 #define READ_H
 
+typedef struct
+{
+    uint32_t *csc_row;
+    uint32_t *csc_col;
+    uint32_t size;
+} Matrix;
 
-void readMatrix(uint32_t **csc_rowOut, uint32_t **csc_colOut, int *n, char *file_path);
+
+void readMatrix(char *file_path, Matrix* M);
 
 void coo2csc(
     uint32_t       * const row,       /*!< CSC row start indices */

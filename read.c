@@ -6,7 +6,7 @@
 #include "read.h"
 #include "mmio.h"
 
-void readMatrix(uint32_t **csc_rowOut, uint32_t **csc_colOut, int *n, char *file_path)
+void readMatrix(char *file_path, Matrix* Mtrx)
 {
 
     int ret_code;
@@ -79,11 +79,10 @@ void readMatrix(uint32_t **csc_rowOut, uint32_t **csc_colOut, int *n, char *file
     // Call coo2csc for isOneBase false
     coo2csc(csc_row, csc_col, I, J, nnz, M, isOneBased);
 
-    *n = M;
-
-    *csc_rowOut = csc_row;
-
-    *csc_colOut = csc_col;
+    Mtrx->csc_col = csc_col;    //csc_col[i] -> total elements up to ith row |
+    Mtrx->csc_row = csc_row;    //csc_row[i] -> column index of ith element
+                                             
+    Mtrx->size = M;
 
 }
 

@@ -26,19 +26,21 @@ int main(int argc, char **argv)
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
-    printf("\n");
+
     char filename[] = "12.mtx";
-    uint32_t *csc_row, *csc_col;  //csc_col[i] -> total elements up to ith row | csc_row[i] -> column index of ith element
-    int n, nnz;
+    Matrix* mtr = malloc(sizeof(Matrix));
+    readMatrix(filename, mtr);
 
-    readMatrix(&csc_row, &csc_col, &n, filename);
-    nnz = csc_col[n-1];
-    printf("\n");
 
-    for (int row = 1; row <= n; row++) 
+    printf("\nSize is %d\n",mtr->size);
+
+
+    // Blocking algorithms: BCSR or CSB
+
+    for (int row = 1; row <= mtr->size; row++) 
     {
-        for (int i1 = csc_col[row - 1]; i1 < csc_col[row]; i1++)   //csc_row[i1] -> column
-            printf("(%d ,%d) ", csc_row[i1], row);
+        for (int i1 = mtr->csc_col[row - 1]; i1 < mtr->csc_col[row]; i1++)   //csc_row[i1] -> column
+            printf("(%d ,%d) ", mtr->csc_row[i1], row);
             printf("\n");
 
     }
@@ -49,5 +51,9 @@ int main(int argc, char **argv)
 
     // Finalize the MPI environment.
     MPI_Finalize();
+}
+
+void csrBMM(Matrix A, Matrix B, Matrix* C){
+
 }
 

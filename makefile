@@ -1,6 +1,6 @@
 CC=gcc
 MPICC=mpicc
-CFLAGS=-O3 -lpthread -lm
+CFLAGS=-O3 -lm
 MP=-fopenmp 
 N=2
 
