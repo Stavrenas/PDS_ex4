@@ -11,6 +11,7 @@
 
 int main(int argc, char **argv)
 {
+  // this is me
     MPI_Init(NULL, NULL);
 
     int world_size, world_rank, name_len;
