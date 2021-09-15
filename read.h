@@ -3,11 +3,14 @@
 
 typedef struct
 {
-    uint32_t *csc_row;
-    uint32_t *csc_col;
+    uint32_t *csc_idx;
+    uint32_t *csc_elem;
     uint32_t size;
+    uint32_t sizeX;
+    uint32_t sizeY;
 } Matrix;
 
+void cscSymmetricBMM(Matrix* A, Matrix* B, Matrix* C);
 
 void readMatrix(char *file_path, Matrix* M);
 

@@ -71,7 +71,7 @@ void readMatrix(char *file_path, Matrix* Mtrx)
 
     const uint32_t nnz = nz;
 
-    printf("M is %d, nnz is %d\n", M, nnz);
+    printf("\nM is %d, nnz is %d\n", M, nnz);
     uint32_t *csc_row = (uint32_t *)malloc(nnz * sizeof(uint32_t));
     uint32_t *csc_col = (uint32_t *)malloc((M + 1) * sizeof(uint32_t));
     uint32_t isOneBased = 0;
@@ -79,8 +79,8 @@ void readMatrix(char *file_path, Matrix* Mtrx)
     // Call coo2csc for isOneBase false
     coo2csc(csc_row, csc_col, I, J, nnz, M, isOneBased);
 
-    Mtrx->csc_col = csc_col;    //csc_col[i] -> total elements up to ith row |
-    Mtrx->csc_row = csc_row;    //csc_row[i] -> column index of ith element
+    Mtrx->csc_elem = csc_col;    //csc_col[i] -> total elements up to ith row (size + 1)
+    Mtrx->csc_idx = csc_row;    //csc_row[i] -> column index of ith element   (nnz     )
                                              
     Mtrx->size = M;
 
