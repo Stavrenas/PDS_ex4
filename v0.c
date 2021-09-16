@@ -9,6 +9,8 @@
 #include "read.h"
 #include "mmio.h"
 
+double loop_time = 0;
+double time = 0;
 int main(int argc, char **argv)
 {
     // this is me
@@ -21,18 +23,26 @@ int main(int argc, char **argv)
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     MPI_Get_processor_name(processor_name, &name_len);
 
-    char filename[] = "12.mtx";
-    Matrix *mtr = malloc(sizeof(Matrix));
+    char filename[] = "mycielskian.mtx";
+
+    //dblp 1200 sec
+    //mycielskian 304 sec
+
+    Matrix *A = malloc(sizeof(Matrix));
+    Matrix *B = malloc(sizeof(Matrix));
     Matrix *res = malloc(sizeof(Matrix));
-    readMatrix(filename, mtr);
+
+    readMatrix(filename, A);
+    readMatrix(filename, B);
 
     struct timeval start = tic();
-    for (int i = 0; i < 10000000; i++)
-        cscSymmetricBMM(mtr, mtr, res);
 
-    printf("time for mult: %f\n", toc(start));
+    for (int i = 0; i < 1; i++)
+        cscSymmetricBMM(A, B, res);
 
-    printMatrix(res);
+    printf("Time for mult: %f\n", toc(start));
+
+    //printMatrix(res);
 
     // Blocking algorithms: BCSR or CSB
 
@@ -43,59 +53,71 @@ int main(int argc, char **argv)
 
 void cscSymmetricBMM(Matrix *A, Matrix *B, Matrix *C)
 {
-    uint32_t *c_elem, *c_idx, elements, idx_size, new_size, *temp;
-    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+    uint32_t *c_elem, *c_idx, elements, *temp, indexB, last;
+
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
-    idx_size = 0 * sizeof(uint32_t);
+    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+    temp = (uint32_t *)malloc((A->size) * sizeof(uint32_t));
 
-    bool added;
-
-    temp = malloc(A->size * sizeof(uint32_t));
+    uint32_t idx_size = 0;
+    uint32_t end = 0;
 
     c_elem[0] = 0;
-
+    last = -1; //the first element is set to -1 and is unused. Thats why you see elements+1 on temp
+    int perc = 0;
     for (int row = 1; row <= A->size; row++)
     { //go to each row of mtr A
 
+        // if (row * 100 / A->size != perc)
+        // {
+        //     printf("%d%% \n", perc);
+        //     perc = row * 100 / A->size;
+        // }
         elements = 0;
         c_elem[row] = c_elem[row - 1] + elements;
+
         for (int col = 1; col <= B->size; col++)
         { //go to each col of mtr Β
 
             for (int a = A->csc_elem[row - 1]; a < A->csc_elem[row]; a++)
-            { //go to each element in row of mtr A
+            { //go to each element in row "row" of mtr A
 
-                //printf("\n(%d ,%d):", A->csc_idx[a], row);
-                int index = A->csc_idx[a];
+                int indexA = A->csc_idx[a];
 
-                for (int b = B->csc_elem[index - 1]; b < B->csc_elem[index]; b++)
-                {
-                    added = false;
-                    uint32_t ind = B->csc_idx[b];
+                for (int b = B->csc_elem[indexA - 1]; b < B->csc_elem[indexA]; b++)
+                { //check if there is a match in col "col"of mtr B
+                    indexB = B->csc_idx[b];
 
-                    if (ind > col)
+                    if (indexB > col)
                         break;
 
-                    else if (ind == col)
+                    else if (indexB == col)
                     {
-                        if (elements > 1 && temp[elements - 1] == col)
-                            break;
+                        if (last == col) //check if the element is already added
+                        {
+                            continue;
+                            //do not add it
+                        }
 
-                        temp[elements] = col;
-                        elements++;
-                        added = true;
+                        else
+                        {
+                            temp[elements] = col;
+                            last = col;
+                            elements++;
+                        }
                         break;
                     }
                 }
             }
         }
+
         c_elem[row] = c_elem[row - 1] + elements;
 
         if (elements != 0)
         {
             idx_size += elements * sizeof(uint32_t); //in bytes
             c_idx = realloc(c_idx, idx_size);
-            uint32_t end = idx_size / sizeof(uint32_t);
+            end += elements;
 
             for (int i = end - elements; i < end; i++)
                 c_idx[i] = temp[i - end + elements];
