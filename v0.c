@@ -9,11 +9,9 @@
 #include "read.h"
 #include "mmio.h"
 
-double loop_time = 0;
-double time = 0;
+
 int main(int argc, char **argv)
 {
-    // this is me
     MPI_Init(NULL, NULL);
 
     int world_size, world_rank, name_len;
@@ -26,7 +24,7 @@ int main(int argc, char **argv)
     char filename[] = "mycielskian.mtx";
 
     //dblp 1200 sec
-    //mycielskian 304 sec
+    //mycielskian 100 sec
 
     Matrix *A = malloc(sizeof(Matrix));
     Matrix *B = malloc(sizeof(Matrix));
@@ -38,7 +36,7 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     for (int i = 0; i < 1; i++)
-        cscSymmetricBMM(A, B, res);
+        cscBMM(A, B, res);
 
     printf("Time for mult: %f\n", toc(start));
 
@@ -51,7 +49,7 @@ int main(int argc, char **argv)
     MPI_Finalize();
 }
 
-void cscSymmetricBMM(Matrix *A, Matrix *B, Matrix *C)
+void cscBMM(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, *temp, indexB, last;
 
