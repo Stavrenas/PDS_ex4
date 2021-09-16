@@ -15,7 +15,4 @@ struct timeval tic();
 
 double toc(struct timeval begin);
 
-void printMatrix(Matrix *res);
-
-
 #endif //UTILITIES_H

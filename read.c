@@ -130,3 +130,15 @@ void coo2csc(
         last = temp;
     }
 }
+
+void printMatrix(Matrix *res)
+{
+    printf("C->csc_elem = [");
+    for (int i = 0; i <= res->size; i++)
+        printf("%d ", res->csc_elem[i]);
+    printf("] \n");
+    printf("C->csc_idx = [");
+    for (int i = 0; i < res->csc_elem[res->size]; i++)
+        printf("%d ", res->csc_idx[i]);
+    printf("] \n");
+}

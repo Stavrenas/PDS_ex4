@@ -24,4 +24,6 @@ void coo2csc(
     uint32_t const         isOneBased /*!< Whether COO is 0- or 1-based */
 );
 
+void printMatrix(Matrix *res);
+
 #endif //READ_H
