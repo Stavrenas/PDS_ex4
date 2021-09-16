@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv)
 {
-  // this is me
+    // this is me
     MPI_Init(NULL, NULL);
 
     int world_size, world_rank, name_len;
@@ -71,11 +71,12 @@ void cscSymmetricBMM(Matrix *A, Matrix *B, Matrix *C)
                 for (int b = B->csc_elem[index - 1]; b < B->csc_elem[index]; b++)
                 {
                     added = false;
+                    uint32_t ind = B->csc_idx[b];
 
-                    if (B->csc_idx[b] > col)
+                    if (ind > col)
                         break;
 
-                    else if (B->csc_idx[b] == col)
+                    else if (ind == col)
                     {
                         if (elements > 1 && temp[elements - 1] == col)
                             break;
