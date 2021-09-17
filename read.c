@@ -71,7 +71,7 @@ void readMatrix(char *file_path, Matrix* Mtrx)
 
     const uint32_t nnz = nz;
 
-    printf("\nM is %d, nnz is %d\n", M, nnz);
+    //printf("M is %d, nnz is %d\n", M, nnz);
     uint32_t *csc_row = (uint32_t *)malloc(nnz * sizeof(uint32_t));
     uint32_t *csc_col = (uint32_t *)malloc((M + 1) * sizeof(uint32_t));
     uint32_t isOneBased = 0;
