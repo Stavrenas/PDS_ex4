@@ -9,7 +9,7 @@ default: all
 all: v0
 
 v0: v0.c utilities.c read.c controller.c mmio.c
-	$(MPICC) $(CFLAGS) -o $@ $^
+	$(MPICC) $(CFLAGS) $(MP) -o $@ $^
 test: test.c utilities.c read.c controller.c mmio.c
 	$(MPICC) $(CFLAGS) -o $@ $^
 run:
