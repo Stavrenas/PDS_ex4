@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
     printBlockedMatrix(blockA);
 
-    printMatrix(A);
+    //printMatrix(A);
 
     // struct timeval start = tic();
 
@@ -65,7 +65,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
         for (uint32_t blockX = 1; blockX <= ceil(mtr->size / blockSize); blockX++)
         {
 
-            printf("BlockX is %d and BlockY is %d\n",blockX,blockY);
+            //printf("BlockX is %d and BlockY is %d\n",blockX,blockY);
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             int *block_idx, *block_elem, elements, idx_size;
 
@@ -112,8 +112,8 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
             block->size = blockSize;
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
-            printMatrix(block);
-            printf("\n\n");
+            //printMatrix(block);
+            //printf("\n\n");
 
             blocked->list[blocks] = block;
             blocks++;
@@ -126,5 +126,5 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
     }
 
     blocked->size = blocks;
-    printf("Total blocks: %d\n",blocks);
+    //printf("Total blocks: %d\n",blocks);
 }
