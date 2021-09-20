@@ -18,6 +18,10 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C);
 
 void readMatrix(char *file_path, Matrix* M);
 
+void saveMatrix(Matrix *res, char* filename);
+
+void printMatrix(Matrix *res);
+
 void coo2csc(
     uint32_t       * const row,       /*!< CSC row start indices */
     uint32_t       * const col,       /*!< CSC column indices */
@@ -28,6 +32,6 @@ void coo2csc(
     uint32_t const         isOneBased /*!< Whether COO is 0- or 1-based */
 );
 
-void printMatrix(Matrix *res);
+
 
 #endif //READ_H

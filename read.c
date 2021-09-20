@@ -6,7 +6,7 @@
 #include "read.h"
 #include "mmio.h"
 
-void readMatrix(char *file_path, Matrix* Mtrx)
+void readMatrix(char *file_path, Matrix *Mtrx)
 {
 
     int ret_code;
@@ -79,11 +79,10 @@ void readMatrix(char *file_path, Matrix* Mtrx)
     // Call coo2csc for isOneBase false
     coo2csc(csc_row, csc_col, I, J, nnz, M, isOneBased);
 
-    Mtrx->csc_elem = csc_col;    //csc_col[i] -> total elements up to ith row (size + 1)
-    Mtrx->csc_idx = csc_row;    //csc_row[i] -> column index of ith element   (nnz     )
-                                             
-    Mtrx->size = M;
+    Mtrx->csc_elem = csc_col; //csc_col[i] -> total elements up to ith row (size + 1)
+    Mtrx->csc_idx = csc_row;  //csc_row[i] -> column index of ith element   (nnz     )
 
+    Mtrx->size = M;
 }
 
 void coo2csc(
@@ -141,4 +140,20 @@ void printMatrix(Matrix *res)
     for (int i = 0; i < res->csc_elem[res->size]; i++)
         printf("%d ", res->csc_idx[i]);
     printf("] \n");
+}
+
+void saveMatrix(Matrix *res, char *filename)
+{
+
+    FILE *filepointer = fopen(filename, "w"); //create a binary file
+
+    fprintf(filepointer,"C->csc_elem = [");
+    for (int i = 0; i <= res->size; i++)
+        fprintf(filepointer,"%d ", res->csc_elem[i]);
+    fprintf(filepointer,"] \n");
+    fprintf(filepointer,"C->csc_idx = [");
+    for (int i = 0; i < res->csc_elem[res->size]; i++)
+        fprintf(filepointer,"%d ", res->csc_idx[i]);
+    fprintf(filepointer,"] \n");
+    fclose(filepointer);
 }
