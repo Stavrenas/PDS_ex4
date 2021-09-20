@@ -15,4 +15,5 @@ struct timeval tic();
 
 double toc(struct timeval begin);
 
+BlockedMatrix* blockMatrix(Matrix* mtr, uint32_t blockSize);
 #endif //UTILITIES_H

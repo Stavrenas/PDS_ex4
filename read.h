@@ -3,7 +3,7 @@
 
 typedef struct
 {
-    uint32_t *csc_idx;
+    uint32_t *csc_idx;  //column indexes
     uint32_t *csc_elem;
     uint32_t size;
     uint32_t sizeX;
@@ -14,8 +14,7 @@ typedef struct
 {
     uint32_t size;
     uint32_t* offsets;
-    Matrix* list;
-
+    Matrix** list;
 } BlockedMatrix;
 
 void cscBMM(Matrix *A, Matrix *B, Matrix *C);
