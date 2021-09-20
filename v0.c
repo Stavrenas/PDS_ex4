@@ -94,11 +94,11 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
                         }
                     }
 
-                    block_elem[row - (blockY - 1) * blockSize + 1] = elements;
+                    block_elem[row - (blockY - 1) * blockSize - 1] = elements;
                 }
 
                 else // zero padding vertically
-                    block_elem[row - (blockY - 1) * blockSize + 1] = block_elem[row - (blockY - 1) * blockSize];
+                    block_elem[row - (blockY - 1) * blockSize - 1] = block_elem[row - (blockY - 1) * blockSize - 2];
             }
 
             block->size = block_elem[blockSize];
