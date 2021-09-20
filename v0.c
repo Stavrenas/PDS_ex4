@@ -21,24 +21,24 @@ int main(int argc, char **argv)
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     MPI_Get_processor_name(processor_name, &name_len);
 
-    //dblp 1200 sec
-    //mycielskian 116 sec
-
     Matrix *A = malloc(sizeof(Matrix));
     Matrix *B = malloc(sizeof(Matrix));
     Matrix *res = malloc(sizeof(Matrix));
 
-    char filename[] = "mycielskian.mtx";
+    char filename[] = "12.mtx";
     readMatrix(filename, A);
     readMatrix(filename, B);
 
+    printMatrix(A);
+
     struct timeval start = tic();
 
-    cscBMMparallel(A, B, res);
+    cscBMM2(A, B, res);
 
     printf("Time for mult: %f\n", toc(start));
-    //printMatrix(res);
-    saveMatrix(res, "mycielskianPARALLEL.txt");
+
+    printMatrix(res);
+    //saveMatrix(res, "mycielskianPARALLEL.txt");
 
     // Blocking algorithms: BCSR or CSB
 
@@ -140,16 +140,11 @@ void cscBMM(Matrix *A, Matrix *B, Matrix *C)
     uint32_t end = 0;
 
     c_elem[0] = 0;
-    last = -1; //the first element is set to -1 and is unused. Thats why you see elements+1 on temp
-    int perc = 0;
+    last = -1; //the first element is set to -1 and is used to avoid adding the same element twice
+
     for (uint32_t row = 1; row <= A->size; row++)
     { //go to each row of mtr A
 
-        // if (row * 100 / A->size != perc)
-        // {
-        //     printf("%d%% \n", perc);
-        //     perc = row * 100 / A->size;
-        // }
         elements = 0;
         c_elem[row] = c_elem[row - 1] + elements;
 
@@ -215,15 +210,11 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
     elements = (uint32_t *)malloc((A->size) * sizeof(uint32_t));
 
     c_elem[0] = 0;
-
     int perc = 0;
-    int sizeA, sizeB, start_a, end_a, start_b, end_b;
-    sizeA = A->size;
 
-    //printf("thread %d, of %d\n",omp_get_thread_num(),omp_get_num_threads());
 #pragma omp parallel
     {
-        uint32_t *temp, indexB, indexA, last, localElements,totalElements, tempSize;
+        uint32_t *temp, indexB, indexA, last, localElements, totalElements, tempSize;
         temp = (uint32_t *)malloc(sizeof(uint32_t));
         tempSize = 1;
         last = -1;
@@ -237,12 +228,6 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
         for (uint32_t row = 1 + id; row <= A->size; row += nthreads)
         { //go to each row of mtr A
 
-            // if (row * 100 / A->size != perc)
-            // {
-            //     printf("%d%% \n", perc);
-            //     perc = row * 100 / A->size;
-            // }
-            // printf("Row %d of %d\n", row, A->size);
             localElements = 0;
 
             for (uint32_t col = 1; col <= B->size; col++)
@@ -269,7 +254,7 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
 
                             else
                             {
-                                temp[totalElements] = col;  //replaced local elements with total elements
+                                temp[totalElements] = col; //replaced local elements with total elements
                                 totalElements++;
                                 if (totalElements == tempSize)
                                 {
@@ -289,12 +274,14 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
         }
 
 #pragma omp barrier //sync
+
         if (id == 0)
         {
             for (uint32_t row = 1; row <= A->size; row++)
                 c_elem[row] = c_elem[row - 1] + elements[row];
             c_idx = realloc(c_idx, c_elem[A->size] * sizeof(uint32_t));
         }
+
 #pragma omp barrier //sync
 
         uint32_t index = 0;
@@ -306,11 +293,10 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
             end = c_elem[row];
 
             for (uint32_t j = start; j < end; j++)
-            {
                 c_idx[j] = temp[j - start];
-            }
         }
     }
+
     C->csc_idx = c_idx;
     C->csc_elem = c_elem;
     C->size = A->size;

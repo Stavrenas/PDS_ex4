@@ -10,6 +10,14 @@ typedef struct
     uint32_t sizeY;
 } Matrix;
 
+typedef struct
+{
+    uint32_t size;
+    uint32_t* offsets;
+    Matrix* list;
+
+} BlockedMatrix;
+
 void cscBMM(Matrix *A, Matrix *B, Matrix *C);
 
 void cscBMM2(Matrix *A, Matrix *B, Matrix *C);
