@@ -84,7 +84,6 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
 
                         else if (mtr->csc_idx[j] <= blockX * blockSize && mtr->csc_idx[j] > (blockX - 1) * blockSize)
                         {
-
                             block_idx[elements] = mtr->csc_idx[j] - (blockX - 1) * blockSize;
                             elements++;
                             if (elements == idx_size)
@@ -102,7 +101,7 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
                     block_elem[row - (blockY - 1) * blockSize + 1] = block_elem[row - (blockY - 1) * blockSize];
             }
 
-            block->size = block_elem[blockSize + 1];
+            block->size = block_elem[blockSize];
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
 
