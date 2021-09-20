@@ -22,6 +22,7 @@ matrix = {
 0,0,0,0,0,0,0,0,0,0,0,1;
 0,0,0,0,0,0,0,0,0,0,0,0;
 };
+
 matrix = cell2mat(matrix)
 trans = (matrix + matrix') > 0
 C = (matrix * matrix) > 0

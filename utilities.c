@@ -5,9 +5,11 @@
 #include <float.h>
 #include <time.h>
 #include <sys/time.h>
+#include <omp.h>
 #include "utilities.h"
 #include "mmio.h"
 #include "read.h"
+
 
 void swap(double *n1, double *n2)
 {

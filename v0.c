@@ -24,20 +24,25 @@ int main(int argc, char **argv)
     Matrix *A = malloc(sizeof(Matrix));
     Matrix *B = malloc(sizeof(Matrix));
     Matrix *res = malloc(sizeof(Matrix));
+    BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     char filename[] = "12.mtx";
     readMatrix(filename, A);
     readMatrix(filename, B);
 
+    blockMatrix(A,3,blockA);
+
+    printBlockedMatrix(blockA);
+
     printMatrix(A);
 
-    struct timeval start = tic();
+    // struct timeval start = tic();
 
-    cscBMM2(A, B, res);
+    // cscBMM2(A, B, res);
 
-    printf("Time for mult: %f\n", toc(start));
+    // printf("Time for mult: %f\n", toc(start));
 
-    printMatrix(res);
+    // printMatrix(res);
     //saveMatrix(res, "mycielskianPARALLEL.txt");
 
     // Blocking algorithms: BCSR or CSB
@@ -48,9 +53,8 @@ int main(int argc, char **argv)
     //free memory
 }
 
-BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
+void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
 {
-    BlockedMatrix *blocked = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     uint32_t size = 1;
     blocked->list = (Matrix **)malloc(blocked->size * sizeof(Matrix *));
@@ -101,7 +105,7 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
                     block_elem[row - (blockY - 1) * blockSize - 1] = block_elem[row - (blockY - 1) * blockSize - 2];
             }
 
-            block->size = block_elem[blockSize];
+            block->size = blockSize;
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
 

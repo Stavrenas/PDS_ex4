@@ -29,6 +29,10 @@ void saveMatrix(Matrix *res, char* filename);
 
 void printMatrix(Matrix *res);
 
+void printBlockedMatrix(BlockedMatrix *res);
+
+void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked);
+
 void coo2csc(
     uint32_t       * const row,       /*!< CSC row start indices */
     uint32_t       * const col,       /*!< CSC column indices */
