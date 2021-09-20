@@ -70,8 +70,9 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
             elements = 0;
             idx_size = 1;
 
-            for (int row = (blockY - 1) * blockSize + 1; row <= blockY * blockSize + 1; row++)
+            for (int row = (blockY - 1) * blockSize + 1; row < blockY * blockSize + 1; row++)
             {
+                // Check if row exceeds matrix size
                 if (row <= mtr->size)
                 {
                     uint32_t start = mtr->csc_elem[row - 1];
@@ -97,7 +98,7 @@ BlockedMatrix *blockMatrix(Matrix *mtr, uint32_t blockSize)
                     block_elem[row - (blockY - 1) * blockSize + 1] = elements;
                 }
 
-                else //zero padding vertically
+                else // zero padding vertically
                     block_elem[row - (blockY - 1) * blockSize + 1] = block_elem[row - (blockY - 1) * blockSize];
             }
 
