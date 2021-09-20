@@ -53,11 +53,10 @@ int main(int argc, char **argv)
     //free memory
 }
 
-void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
+void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
+    blockedMatrix->list = (Matrix **)malloc(blockSize * blockSize * sizeof(Matrix *));
 
-    uint32_t size = 1;
-    blocked->list = (Matrix **)malloc(blocked->size * sizeof(Matrix *));
     uint32_t blocks = 0;
 
     for (uint32_t blockY = 1; blockY <= ceil(mtr->size / blockSize); blockY++)
@@ -112,19 +111,15 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
             block->size = blockSize;
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
+
             //printMatrix(block);
             //printf("\n\n");
 
-            blocked->list[blocks] = block;
+            blockedMatrix->list[blocks] = block;
             blocks++;
-            if (blocks == size)
-            {
-                size *= 2;
-                blocked->list = realloc(blocked->list, size * sizeof(Matrix *));
-            }
         }
     }
 
-    blocked->size = blocks;
+    blockedMatrix->size = blocks;
     //printf("Total blocks: %d\n",blocks);
 }
