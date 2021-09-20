@@ -10,7 +10,11 @@ typedef struct
     uint32_t sizeY;
 } Matrix;
 
-void cscSymmetricBMM(Matrix* A, Matrix* B, Matrix* C);
+void cscBMM(Matrix *A, Matrix *B, Matrix *C);
+
+void cscBMM2(Matrix *A, Matrix *B, Matrix *C);
+
+void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C);
 
 void readMatrix(char *file_path, Matrix* M);
 
