@@ -146,7 +146,7 @@ void printBlockedMatrix(BlockedMatrix *res){
 
     for (int i = 0; i <= res->size; i++){
         printf("Block %d: \n",i);
-        printMatrix(res->list[i]);
+        //printMatrix(res->list[i]);
     }
     
 

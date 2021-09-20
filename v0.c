@@ -64,6 +64,8 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
     {
         for (uint32_t blockX = 1; blockX <= ceil(mtr->size / blockSize); blockX++)
         {
+
+            printf("BlockX is %d and BlockY is %d\n",blockX,blockY);
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             int *block_idx, *block_elem, elements, idx_size;
 
@@ -83,12 +85,14 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
                     uint32_t end = mtr->csc_elem[row];
                     for (int j = start; j < end; j++)
                     {
+                        //printf("Checking %d :\n",mtr->csc_idx[j]);
                         if (mtr->csc_idx[j] > blockX * blockSize) //check if it is worth it
                             break;
 
                         else if (mtr->csc_idx[j] <= blockX * blockSize && mtr->csc_idx[j] > (blockX - 1) * blockSize)
                         {
                             block_idx[elements] = mtr->csc_idx[j] - (blockX - 1) * blockSize;
+                            //printf("Added %d\n", mtr->csc_idx[j] - (blockX - 1) * blockSize);
                             elements++;
                             if (elements == idx_size)
                             {
@@ -98,16 +102,18 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
                         }
                     }
 
-                    block_elem[row - (blockY - 1) * blockSize - 1] = elements;
+                    block_elem[row - (blockY - 1) * blockSize ] = elements;
                 }
 
                 else // zero padding vertically
-                    block_elem[row - (blockY - 1) * blockSize - 1] = block_elem[row - (blockY - 1) * blockSize - 2];
+                    block_elem[row - (blockY - 1) * blockSize ] = block_elem[row - (blockY - 1) * blockSize - 1];
             }
 
             block->size = blockSize;
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
+            printMatrix(block);
+            printf("\n\n");
 
             blocked->list[blocks] = block;
             blocks++;
@@ -120,4 +126,5 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blocked)
     }
 
     blocked->size = blocks;
+    printf("Total blocks: %d\n",blocks);
 }
