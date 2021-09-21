@@ -26,13 +26,15 @@ int main(int argc, char **argv)
     Matrix *res = malloc(sizeof(Matrix));
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char filename[] = "12.mtx";
+    char filename[] = "dblp.mtx";
     readMatrix(filename, A);
     readMatrix(filename, B);
 
-    blockMatrix(A, 3, blockA);
+    struct timeval start = tic();
+    blockMatrix(A, 200, blockA);
+    printf("Time for block: %f\n", toc(start));
 
-    printBlockedMatrix(blockA);
+    //printBlockedMatrix(blockA);
 
     //printMatrix(A);
 
@@ -57,10 +59,10 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
     uint32_t maxBlocks = ceil(mtr->size / blockSize);
     uint32_t totalBblocks = 0;
-    uint32_t listSize = 1;
+    uint32_t listSize = 1;  //also equals to offset size
 
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
-    blockedMatrix->offsets = (uint32_t *)malloc(maxBlocks * maxBlocks * sizeof(uint32_t)); //maximum size of blocks
+    blockedMatrix->offsets = (uint32_t *)malloc(1 * sizeof(uint32_t)); //maximum size of blocks
 
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
@@ -99,7 +101,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                             if (elements == idx_size)
                             {
-                                idx_size *= 2;
+                                idx_size ++;
                                 block_idx = realloc(block_idx, idx_size * sizeof(int));
                             }
                         }
@@ -124,8 +126,10 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                 if (listSize == totalBblocks)
                 {
-                    listSize *= 2;
+                    listSize ++;
                     blockedMatrix->list = realloc(blockedMatrix->list, listSize * sizeof(Matrix *));
+                    blockedMatrix->offsets = realloc(blockedMatrix->offsets, listSize * sizeof(uint32_t *));
+
                 }
             }
         }
