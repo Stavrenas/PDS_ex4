@@ -44,5 +44,9 @@ void coo2csc(
 );
 
 
+void clearMatrix(Matrix *A);
+
+void clearBlockedMatrix(BlockedMatrix *blockA);
+
 
 #endif //READ_H

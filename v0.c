@@ -53,59 +53,17 @@ int main(int argc, char **argv)
     MPI_Finalize();
 
     // free memory
-    
-    // free A
-    free(A->csc_idx);
-    free(A->csc_elem);
-    free(A);
 
-    // free blocked A
-    for(int i = 0; i < blockA->size; ++i) {
-        free(blockA->list[i]->csc_idx);
-        free(blockA->list[i]->csc_elem);
-        free(blockA->list[i]);
-    }
-
-    free(blockA->offsets);
-    free(blockA);
-
-    // free B
-    free(B->csc_idx);
-    free(B->csc_elem);
-    free(B);
-
-    // // free blocked B
-    // for(int i = 0; i < size; ++i) {
-    //     free(blockB->list[i]->csc_idx);
-    //     free(blockB->list[i]->csc_elem);
-    //     free(blockB->list[i]);
-    // }
-    //
-    // free(blockB->offsets
-    // free(blockB);
-
-    // // free C
-    // free(C->csc_idx);
-    // free(C->csc_elem);
-    // free(C);
-    // // free blocked C
-    //
-    // for(int i = 0; i < size; ++i) {
-    //     free(blockC->list[i]->csc_idx);
-    //     free(blockC->list[i]->csc_elem);
-    //     free(blockC->list[i]);
-    // }
-    //
-    // free(blockC->offsets
-    // free(blockC);
-
-  }
+    clearMatrix(A);
+    clearMatrix(B);
+    clearBlockedMatrix(blockA);
+}
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
     uint32_t maxBlocks = ceil(mtr->size / blockSize);
     uint32_t totalBblocks = 0;
-    uint32_t listSize = 1;  //also equals to offset size
+    uint32_t listSize = 1; //also equals to offset size
 
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
     blockedMatrix->offsets = (uint32_t *)malloc(1 * sizeof(uint32_t)); //maximum size of blocks
@@ -147,7 +105,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                             if (elements == idx_size)
                             {
-                                idx_size ++;
+                                idx_size++;
                                 block_idx = realloc(block_idx, idx_size * sizeof(int));
                             }
                         }
@@ -172,10 +130,9 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                 if (listSize == totalBblocks)
                 {
-                    listSize ++;
+                    listSize++;
                     blockedMatrix->list = realloc(blockedMatrix->list, listSize * sizeof(Matrix *));
                     blockedMatrix->offsets = realloc(blockedMatrix->offsets, listSize * sizeof(uint32_t *));
-
                 }
             }
         }
@@ -183,5 +140,5 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
     blockedMatrix->size = totalBblocks;
 
-    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n",maxBlocks * maxBlocks,totalBblocks, (float)(totalBblocks)/(maxBlocks * maxBlocks));
+    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBblocks, (float)(totalBblocks) / (maxBlocks * maxBlocks));
 }

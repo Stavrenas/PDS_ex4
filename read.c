@@ -154,6 +154,29 @@ void printBlockedMatrix(BlockedMatrix *res){
 
 }
 
+void clearMatrix(Matrix *A)
+{
+    // free A
+    free(A->csc_idx);
+    free(A->csc_elem);
+    free(A);
+}
+
+void clearBlockedMatrix(BlockedMatrix *blockA)
+{
+
+    // free blocked A
+    for (int i = 0; i < blockA->size; ++i)
+    {
+        free(blockA->list[i]->csc_idx);
+        free(blockA->list[i]->csc_elem);
+        free(blockA->list[i]);
+    }
+
+    free(blockA->offsets);
+    free(blockA);
+}
+
 void saveMatrix(Matrix *res, char *filename)
 {
 
