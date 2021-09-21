@@ -55,16 +55,18 @@ int main(int argc, char **argv)
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
-    blockedMatrix->list = (Matrix **)malloc(ceil(mtr->size / blockSize) * ceil(mtr->size / blockSize) * sizeof(Matrix *));
-
+    uint32_t maxBlocks = maxBlocks;
     uint32_t totalBblocks = 0;
+    uint32_t listSize = 1;
 
-    for (uint32_t blockY = 1; blockY <= ceil(mtr->size / blockSize); blockY++)
+    blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
+    blockedMatrix->offsets = (uint32_t *)malloc(maxBlocks * maxBlocks * sizeof(uint32_t)); //maximum size of blocks
+
+    for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
-        for (uint32_t blockX = 1; blockX <= ceil(mtr->size / blockSize); blockX++)
+        for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
-
-            //printf("BlockX is %d and BlockY is %d\n",blockX,blockY);
+            
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             int *block_idx, *block_elem, elements, idx_size;
 
@@ -110,12 +112,22 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
                     block_elem[row - (blockY - 1) * blockSize] = block_elem[row - (blockY - 1) * blockSize - 1];
             }
 
-            block->size = blockSize;
-            block->csc_idx = block_idx;
-            block->csc_elem = block_elem;
-            blockedMatrix->list[totalBblocks] = block;
+            if (elements != 0)
+            {
+                block->size = blockSize;
+                block->csc_idx = block_idx;
+                block->csc_elem = block_elem;
+                blockedMatrix->list[totalBblocks] = block;
 
-            totalBblocks++;
+                blockedMatrix->offsets[totalBblocks] = (blockY - 1) * maxBlocks + blockX;
+                totalBblocks++;
+
+                if (listSize == totalBblocks)
+                {
+                    listSize *= 2;
+                    blockedMatrix->list = realloc(blockedMatrix->list, listSize * sizeof(Matrix *));
+                }
+            }
         }
     }
 
