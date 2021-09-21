@@ -53,20 +53,20 @@ int main(int argc, char **argv)
     MPI_Finalize();
 
     // free memory
-    
+
     // free A
     free(A->csc_idx);
     free(A->csc_elem);
     free(A);
 
     // free blocked A
-    for(int i = 0; i < size; ++i) {
+    for(int i = 0; i < blockA->size; ++i) {
         free(blockA->list[i]->csc_idx);
         free(blockA->list[i]->csc_elem);
         free(blockA->list[i]);
     }
 
-    free(blockA->offsets
+    free(blockA->offsets);
     free(blockA);
 
     // free B
@@ -75,13 +75,13 @@ int main(int argc, char **argv)
     free(B);
 
     // // free blocked B
-    // for(int i = 0; i < size; ++i) {
+    // for(int i = 0; i < blockB->size; ++i) {
     //     free(blockB->list[i]->csc_idx);
     //     free(blockB->list[i]->csc_elem);
     //     free(blockB->list[i]);
     // }
     //
-    // free(blockB->offsets
+    // free(blockB->offsets);
     // free(blockB);
 
     // // free C
@@ -90,13 +90,13 @@ int main(int argc, char **argv)
     // free(C);
     // // free blocked C
     //
-    // for(int i = 0; i < size; ++i) {
+    // for(int i = 0; i < blockC->size; ++i) {
     //     free(blockC->list[i]->csc_idx);
     //     free(blockC->list[i]->csc_elem);
     //     free(blockC->list[i]);
     // }
     //
-    // free(blockC->offsets
+    // free(blockC->offsets);
     // free(blockC);
 
   }
