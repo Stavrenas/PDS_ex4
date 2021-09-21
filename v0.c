@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     readMatrix(filename, A);
     readMatrix(filename, B);
 
-    blockMatrix(A,3,blockA);
+    blockMatrix(A, 3, blockA);
 
     printBlockedMatrix(blockA);
 
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
-    blockedMatrix->list = (Matrix **)malloc(blockSize * blockSize * sizeof(Matrix *));
+    blockedMatrix->list = (Matrix **)malloc(ceil(mtr->size / blockSize) * ceil(mtr->size / blockSize) * sizeof(Matrix *));
 
-    uint32_t blocks = 0;
+    uint32_t totalBblocks = 0;
 
     for (uint32_t blockY = 1; blockY <= ceil(mtr->size / blockSize); blockY++)
     {
@@ -71,9 +71,9 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
             block_idx = (int *)malloc(sizeof(int));
             block_elem = (int *)malloc((blockSize + 1) * sizeof(int));
 
+            idx_size = 1;
             block_elem[0] = 0;
             elements = 0;
-            idx_size = 1;
 
             for (int row = (blockY - 1) * blockSize + 1; row < blockY * blockSize + 1; row++)
             {
@@ -82,17 +82,19 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
                 {
                     uint32_t start = mtr->csc_elem[row - 1];
                     uint32_t end = mtr->csc_elem[row];
+
                     for (int j = start; j < end; j++)
                     {
-                        //printf("Checking %d :\n",mtr->csc_idx[j]);
+
                         if (mtr->csc_idx[j] > blockX * blockSize) //check if it is worth it
                             break;
 
                         else if (mtr->csc_idx[j] <= blockX * blockSize && mtr->csc_idx[j] > (blockX - 1) * blockSize)
                         {
+
                             block_idx[elements] = mtr->csc_idx[j] - (blockX - 1) * blockSize;
-                            //printf("Added %d\n", mtr->csc_idx[j] - (blockX - 1) * blockSize);
                             elements++;
+
                             if (elements == idx_size)
                             {
                                 idx_size *= 2;
@@ -101,25 +103,21 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
                         }
                     }
 
-                    block_elem[row - (blockY - 1) * blockSize ] = elements;
+                    block_elem[row - (blockY - 1) * blockSize] = elements;
                 }
 
                 else // zero padding vertically
-                    block_elem[row - (blockY - 1) * blockSize ] = block_elem[row - (blockY - 1) * blockSize - 1];
+                    block_elem[row - (blockY - 1) * blockSize] = block_elem[row - (blockY - 1) * blockSize - 1];
             }
 
             block->size = blockSize;
             block->csc_idx = block_idx;
             block->csc_elem = block_elem;
+            blockedMatrix->list[totalBblocks] = block;
 
-            //printMatrix(block);
-            //printf("\n\n");
-
-            blockedMatrix->list[blocks] = block;
-            blocks++;
+            totalBblocks++;
         }
     }
 
-    blockedMatrix->size = blocks;
-    //printf("Total blocks: %d\n",blocks);
+    blockedMatrix->size = totalBblocks;
 }
