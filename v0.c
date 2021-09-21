@@ -52,8 +52,54 @@ int main(int argc, char **argv)
     //printf("Hello world from processor %s, rank %d out of %d processors\n",processor_name, world_rank, world_size);
     MPI_Finalize();
 
-    //free memory
-}
+    // free memory
+    
+    // free A
+    free(A->csc_idx);
+    free(A->csc_elem);
+    free(A);
+
+    // free blocked A
+    for(int i = 0; i < size; ++i) {
+        free(blockA->list[i]->csc_idx);
+        free(blockA->list[i]->csc_elem);
+        free(blockA->list[i]);
+    }
+
+    free(blockA->offsets
+    free(blockA);
+
+    // free B
+    free(B->csc_idx);
+    free(B->csc_elem);
+    free(B);
+
+    // // free blocked B
+    // for(int i = 0; i < size; ++i) {
+    //     free(blockB->list[i]->csc_idx);
+    //     free(blockB->list[i]->csc_elem);
+    //     free(blockB->list[i]);
+    // }
+    //
+    // free(blockB->offsets
+    // free(blockB);
+
+    // // free C
+    // free(C->csc_idx);
+    // free(C->csc_elem);
+    // free(C);
+    // // free blocked C
+    //
+    // for(int i = 0; i < size; ++i) {
+    //     free(blockC->list[i]->csc_idx);
+    //     free(blockC->list[i]->csc_elem);
+    //     free(blockC->list[i]);
+    // }
+    //
+    // free(blockC->offsets
+    // free(blockC);
+
+  }
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
