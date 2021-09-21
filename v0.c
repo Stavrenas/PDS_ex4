@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     readMatrix(filename, B);
 
     struct timeval start = tic();
-    blockMatrix(A, 200, blockA);
+    blockMatrix(A, 100, blockA);
     printf("Time for block: %f\n", toc(start));
 
     //printBlockedMatrix(blockA);
@@ -136,4 +136,6 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     }
 
     blockedMatrix->size = totalBblocks;
+
+    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n",maxBlocks * maxBlocks,totalBblocks, (float)(totalBblocks)/(maxBlocks * maxBlocks));
 }
