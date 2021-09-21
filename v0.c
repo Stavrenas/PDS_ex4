@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
-    uint32_t maxBlocks = maxBlocks;
+    uint32_t maxBlocks = ceil(mtr->size / blockSize);
     uint32_t totalBblocks = 0;
     uint32_t listSize = 1;
 
@@ -66,7 +66,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     {
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
-            
+
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             int *block_idx, *block_elem, elements, idx_size;
 
