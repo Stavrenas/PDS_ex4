@@ -1,5 +1,6 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
+#include "types.h"
 
 void swap(double *n1, double *n2);
 
@@ -15,6 +16,13 @@ struct timeval tic();
 
 double toc(struct timeval begin);
 
+void cscBMM(Matrix *A, Matrix *B, Matrix *C);
+
+void cscBMM2(Matrix *A, Matrix *B, Matrix *C);
+
+void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C);
+
+void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
 
 #endif //UTILITIES_H

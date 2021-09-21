@@ -8,7 +8,6 @@
 
 void readMatrix(char *file_path, Matrix *Mtrx)
 {
-
     int ret_code;
     MM_typecode matcode;
     FILE *f;
@@ -95,7 +94,6 @@ void coo2csc(
     uint32_t const isOneBased      /*!< Whether COO is 0- or 1-based */
 )
 {
-
     for (uint32_t l = 0; l < n + 1; l++)
         col[l] = 0;
 
@@ -142,16 +140,36 @@ void printMatrix(Matrix *res)
     printf("] \n");
 }
 
-void printBlockedMatrix(BlockedMatrix *res){
+void printBlockedMatrix(BlockedMatrix *res)
+{
 
-    for (int i = 0; i < res->size; i++){
-        printf("Block %d: \n",i);
-        printf("Offset = %d\n",res->offsets[i]);
+    for (int i = 0; i < res->size; i++)
+    {
+        printf("Block %d: \n", i);
+        printf("Offset = %d\n", res->offsets[i]);
         printMatrix(res->list[i]);
         printf("\n");
     }
-    
+}
 
+void clearMatrix(Matrix *A)
+{
+    free(A->csc_idx);
+    free(A->csc_elem);
+    free(A);
+}
+
+void clearBlockedMatrix(BlockedMatrix *blockA)
+{
+    for (int i = 0; i < blockA->size; ++i)
+    {
+        free(blockA->list[i]->csc_idx);
+        free(blockA->list[i]->csc_elem);
+        free(blockA->list[i]);
+    }
+
+    free(blockA->offsets);
+    free(blockA);
 }
 
 void saveMatrix(Matrix *res, char *filename)
@@ -159,13 +177,13 @@ void saveMatrix(Matrix *res, char *filename)
 
     FILE *filepointer = fopen(filename, "w"); //create a binary file
 
-    fprintf(filepointer,"C->csc_elem = [");
+    fprintf(filepointer, "C->csc_elem = [");
     for (int i = 0; i <= res->size; i++)
-        fprintf(filepointer,"%d ", res->csc_elem[i]);
-    fprintf(filepointer,"] \n");
-    fprintf(filepointer,"C->csc_idx = [");
+        fprintf(filepointer, "%d ", res->csc_elem[i]);
+    fprintf(filepointer, "] \n");
+    fprintf(filepointer, "C->csc_idx = [");
     for (int i = 0; i < res->csc_elem[res->size]; i++)
-        fprintf(filepointer,"%d ", res->csc_idx[i]);
-    fprintf(filepointer,"] \n");
+        fprintf(filepointer, "%d ", res->csc_idx[i]);
+    fprintf(filepointer, "] \n");
     fclose(filepointer);
 }
