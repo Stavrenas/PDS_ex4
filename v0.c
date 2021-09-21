@@ -60,13 +60,13 @@ int main(int argc, char **argv)
     free(A);
 
     // free blocked A
-    for(int i = 0; i < size; ++i) {
+    for(int i = 0; i < blockA->size; ++i) {
         free(blockA->list[i]->csc_idx);
         free(blockA->list[i]->csc_elem);
         free(blockA->list[i]);
     }
 
-    free(blockA->offsets
+    free(blockA->offsets);
     free(blockA);
 
     // free B
