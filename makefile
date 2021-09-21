@@ -1,7 +1,7 @@
 CC=gcc
 MPICC=mpicc
 CFLAGS=-O3 -lm
-MP=-fopenmp 
+MP=-fopenmp
 N=2
 
 default: all
@@ -17,6 +17,3 @@ run:
 
 clean:
 	rm -f v0 v1 v2
-
-
-
