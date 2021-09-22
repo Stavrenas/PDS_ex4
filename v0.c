@@ -97,18 +97,38 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                 indexA = A->csc_idx[a];
                 indexB = B->csc_idx[b];
 
-                if (a != end_a && indexA < indexB)
+                //printf("a is %d and b is %d, indexA is %d and indexB is %d\n", a, b, indexA, indexB);
+
+                if (indexA < indexB)
                 {
-                    c_idx[elements] = indexA;
-                    elements++;
-                    a++;
+                    if (a != end_a)
+                    {
+                        c_idx[elements] = indexA;
+                        elements++;
+                        a++;
+                    }
+                    else
+                    {
+                        c_idx[elements] = indexB;
+                        elements++;
+                        b++;
+                    }
                 }
 
-                else if (b != end_b && indexB < indexA)
+                else if (indexA > indexB)
                 {
-                    c_idx[elements] = indexB;
-                    elements++;
-                    b++;
+                    if (b != end_b)
+                    {
+                        c_idx[elements] = indexB;
+                        elements++;
+                        b++;
+                    }
+                    else
+                    {
+                        c_idx[elements] = indexA;
+                        elements++;
+                        a++;
+                    }
                 }
 
                 else
@@ -128,6 +148,32 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                 }
             }
         }
+
+        c_elem[row] = elements;
+    }
+
+    C->csc_idx = c_idx;
+    C->csc_elem = c_elem;
+    C->size = A->size;
+}
+
+void blockBMM(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
+{
+    uint32_t *c_elem, *c_idx, elements, idx_size;
+
+    c_idx = (uint32_t *)malloc(sizeof(uint32_t));
+    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+
+    idx_size = 1;
+    c_elem[0] = 0;
+    elements = 0;
+
+    uint32_t size, start_a, end_a, start_b, end_b, indexA, indexB;
+
+    size = A->size;
+
+    for (uint32_t row = 1; row <= size; row++)
+    { //go to each row of mtr A
 
         c_elem[row] = elements;
     }
