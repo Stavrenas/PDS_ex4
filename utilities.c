@@ -332,7 +332,7 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
     uint32_t maxBlocks = ceil(mtr->size / blockSize);
-    uint32_t totalBblocks = 0;
+    uint32_t totalBlocks = 0;
     uint32_t listSize = 1; //also equals to offset size
 
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
@@ -393,12 +393,12 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
                 block->size = blockSize;
                 block->csc_idx = block_idx;
                 block->csc_elem = block_elem;
-                blockedMatrix->list[totalBblocks] = block;
+                blockedMatrix->list[totalBlocks] = block;
 
-                blockedMatrix->offsets[totalBblocks] = (blockY - 1) * maxBlocks + blockX;
-                totalBblocks++;
+                blockedMatrix->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
+                totalBlocks++;
 
-                if (listSize == totalBblocks)
+                if (listSize == totalBlocks)
                 {
                     listSize++;
                     blockedMatrix->list = realloc(blockedMatrix->list, listSize * sizeof(Matrix *));
@@ -408,7 +408,8 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
         }
     }
 
-    blockedMatrix->size = totalBblocks;
+    blockedMatrix->size = mtr->size;
+    blockedMatrix->totalBlocks = mtr->totalBlocks;
 
-    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBblocks, (float)(totalBblocks) / (maxBlocks * maxBlocks));
+    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
 }

@@ -13,6 +13,7 @@ typedef struct
 typedef struct
 {
     uint32_t size;
+    uint32_t totalBlocks;
     uint32_t *offsets;
     Matrix **list;
 } BlockedMatrix;
