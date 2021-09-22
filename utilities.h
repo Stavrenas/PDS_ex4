@@ -24,5 +24,6 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C);
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
+void addMatrix(Matrix *A, Matrix *B, Matrix *C);
 
 #endif //UTILITIES_H

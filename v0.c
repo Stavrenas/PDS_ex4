@@ -22,29 +22,32 @@ int main(int argc, char **argv)
 
     Matrix *A = malloc(sizeof(Matrix));
     Matrix *B = malloc(sizeof(Matrix));
-    Matrix *res = malloc(sizeof(Matrix));
+    Matrix *C = malloc(sizeof(Matrix));
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char filename[] = "dblp.mtx";
-    readMatrix(filename, A);
-    readMatrix(filename, B);
+    char filenameA[] = "12.mtx";
+    char filenameB[] = "12a.mtx";
+
+    readMatrix(filenameA, A);
+    readMatrix(filenameB, B);
 
     struct timeval start = tic();
-    blockMatrix(A, 100, blockA);
-    printf("Time for block: %f\n", toc(start));
+    for (int i = 0; i < 10000000; i++)
+        addMatrix(A, B, C);
+
+    //blockMatrix(A, 100, blockA);
+    printf("Time for add: %f\n", toc(start));
 
     //printBlockedMatrix(blockA);
 
-    //printMatrix(A);
+    printMatrix(C);
 
-    // struct timeval start = tic();
-
-    // cscBMM2(A, B, res);
+    // cscBMM2(A, B, C);
 
     // printf("Time for mult: %f\n", toc(start));
 
-    // printMatrix(res);
-    //saveMatrix(res, "mycielskianPARALLEL.txt");
+    // printMatrix(C);
+    //saveMatrix(C, "mycielskianPARALLEL.txt");
 
     // Blocking algorithms: BCSR or CSB
 
@@ -55,68 +58,74 @@ int main(int argc, char **argv)
 
     clearMatrix(A);
     clearMatrix(B);
-    clearBlockedMatrix(blockA);
+    clearMatrix(C);
+    // clearBlockedMatrix(blockA);
 }
 
-void addCSC(Matrix *A, Matrix *B, Matrix *C)
+void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
-    uint32_t *c_elem, *c_idx, elements, *temp, indexB, indexA, last;
+    uint32_t *c_elem, *c_idx, elements, idx_size;
 
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
     c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
-    temp = (uint32_t *)malloc((A->size) * sizeof(uint32_t));
 
-    uint32_t idx_size = 1;
-    uint32_t end = 0;
-
+    idx_size = 1;
     c_elem[0] = 0;
-    last = -1;
     elements = 0;
 
-    uint32_t sizeA, sizeB, start_a, end_a, start_b, end_b, indexA, indexB;
+    uint32_t size, start_a, end_a, start_b, end_b, indexA, indexB;
 
-    sizeA = A->size;
-    sizeB = B->size;
+    size = A->size;
 
-    for (uint32_t row = 1; row <= sizeA; row++)
+    for (uint32_t row = 1; row <= size; row++)
     { //go to each row of mtr A
+        //printf("row %d\n",row);
 
         start_a = A->csc_elem[row - 1];
         end_a = A->csc_elem[row];
 
         start_b = B->csc_elem[row - 1];
-        end_b = B->csc_elem[row - 1];
+        end_b = B->csc_elem[row];
 
-        for (uint32_t a = start_a, b = start_b; a < end_a, b < end_b;)
+        for (uint32_t a = start_a, b = start_b;;)
         { //go to each element in row of mtr A and mtr B
 
-            indexA = A->csc_idx[a];
-            indexB = B->csc_idx[b];
-
-            if (indexA < indexB)
-            {
-                c_idx[elements] = indexA;
-                a++;
-            }
-
-            else if (indexB < indexA)
-            {
-                c_idx[elements] = indexB;
-                b++;
-            }
-
+            if (a == end_a && b == end_b)
+                break;
             else
             {
-                c_idx[elements] = indexB;
-                b++;
-                a++;
-            }
-            
-            elements++;
-            if (elements == idx_size)
-            {
-                idx_size *= 2;
-                c_idx = realloc(c_idx, idx_size * sizeof(uint32_t));
+                indexA = A->csc_idx[a];
+                indexB = B->csc_idx[b];
+
+                if (a != end_a && indexA < indexB)
+                {
+                    c_idx[elements] = indexA;
+                    elements++;
+                    a++;
+                }
+
+                else if (b != end_b && indexB < indexA)
+                {
+                    c_idx[elements] = indexB;
+                    elements++;
+                    b++;
+                }
+
+                else
+                {
+                    c_idx[elements] = indexB;
+                    elements++;
+                    if (a != end_a)
+                        a++;
+                    if (b != end_b)
+                        b++;
+                }
+
+                if (elements == idx_size)
+                {
+                    idx_size *= 2;
+                    c_idx = realloc(c_idx, idx_size * sizeof(uint32_t));
+                }
             }
         }
 

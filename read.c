@@ -142,7 +142,6 @@ void printMatrix(Matrix *res)
 
 void printBlockedMatrix(BlockedMatrix *res)
 {
-
     for (int i = 0; i < res->size; i++)
     {
         printf("Block %d: \n", i);
@@ -177,7 +176,6 @@ void clearBlockedMatrix(BlockedMatrix *blockA)
 
 void saveMatrix(Matrix *res, char *filename)
 {
-
     FILE *filepointer = fopen(filename, "w"); //create a binary file
 
     fprintf(filepointer, "C->csc_elem = [");

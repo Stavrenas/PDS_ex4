@@ -330,8 +330,6 @@ void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
 }
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
-
-
 {
     uint32_t maxBlocks = ceil(mtr->size / blockSize);
     uint32_t totalBblocks = 0;
