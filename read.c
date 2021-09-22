@@ -169,8 +169,6 @@ void clearBlockedMatrix(BlockedMatrix *blockA)
     }
 
     // Deallocate memory occupied by blocked matrix data
-    free(blockA->size);
-    free(blockA->totalBlocks);
     free(blockA->list);
     free(blockA->offsets);
     free(blockA);
