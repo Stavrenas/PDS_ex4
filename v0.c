@@ -31,14 +31,22 @@ int main(int argc, char **argv)
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
 
+    uint32_t blockSize = 100;
+
     struct timeval start = tic();
     for (int i = 0; i < 10000000; i++)
         addMatrix(A, B, C);
 
-    //blockMatrix(A, 100, blockA);
-    printf("Time for add: %f\n", toc(start));
+    // Matrix *unblockedA = malloc(sizeof(Matrix));
 
-    //printBlockedMatrix(blockA);
+    // blockMatrix(A, blockSize, blockA);
+    printf("Time for add: %f\n", toc(start));
+    // printf("Time for blocking: %f\n", toc(start));
+    // printBlockedMatrix(blockA);
+
+    // start = tic();
+    // unblockMatrix(unblockedA, blockSize, blockA);
+    // printf("Time for Unblocking: %f\n", toc(start));
 
     printMatrix(C);
 
