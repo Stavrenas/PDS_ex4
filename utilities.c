@@ -409,7 +409,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     }
 
     blockedMatrix->size = mtr->size;
-    blockedMatrix->totalBlocks = mtr->totalBlocks;
+    blockedMatrix->totalBlocks = totalBlocks;
 
     printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
 }
