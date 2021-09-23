@@ -26,4 +26,8 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C);
 
+uint32_t binarySeach(uint32_t* list, uint32_t left, uint32_t right,uint32_t index );
+
+void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
+
 #endif //UTILITIES_H

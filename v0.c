@@ -157,28 +157,113 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
     C->size = A->size;
 }
 
-void blockBMM(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
+void blockBMM(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 {
-    uint32_t *c_elem, *c_idx, elements, idx_size;
+    uint32_t size, totalBlocks;
 
-    c_idx = (uint32_t *)malloc(sizeof(uint32_t));
-    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+    uint32_t blockSize = A->list[0]->size;
+    uint32_t maxBlocks = ceil(A->size / blockSize);
 
-    idx_size = 1;
-    c_elem[0] = 0;
-    elements = 0;
+    size = 1;
+    C->list = (Matrix **)malloc(size * sizeof(Matrix *));
+    C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
 
-    uint32_t size, start_a, end_a, start_b, end_b, indexA, indexB;
+    for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
+    {
+        for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
+        {
+            uint32_t offset = (blockY - 1) * maxBlocks + blockX;
 
-    size = A->size;
+            //Create block: Cp,q (p = BlockY, q = BlockX)
 
-    for (uint32_t row = 1; row <= size; row++)
-    { //go to each row of mtr A
+            Matrix *block = (Matrix *)malloc(sizeof(Matrix));
+            Matrix *result = (Matrix *)malloc(sizeof(Matrix));
 
-        c_elem[row] = elements;
+            uint32_t indexA, indexB; //find indexes of Ap1 and B1q
+
+            for (int i = 0; i < maxBlocks; i++)
+            {
+                indexA = findIndex(A, (blockY - 1) * maxBlocks + i);
+                if (indexA != -1)
+                    break; //stop when we find the first nonzero block in row p
+            }
+
+            for (int i = 0; i < maxBlocks; i++)
+            {
+                indexB = findIndex(B, maxBlocks * i + blockX);
+                if (indexB != -1)
+                    break; //stop when we find the first nonzero block in column q
+            }
+            uint32_t blocksAdded = 0;
+            for (int s = 1; s <= maxBlocks; s++)
+            {
+                //check if the blocks match
+                uint32_t offsetA = A->offsets[indexA];
+                uint32_t offsetB = B->offsets[indexB];
+
+                if (offsetA % maxBlocks == offsetB / maxBlocks)
+                {
+                    cscBMM2(A->list[indexA], B->list[indexB], result);
+                    addMatrix(result, block, block);
+                    indexB++;
+                    indexA++;
+                    blocksAdded = 1;
+                }
+                else if (offsetA % maxBlocks > offsetB / maxBlocks)
+                    indexB++;
+
+                else if (offsetA % maxBlocks < offsetB / maxBlocks)
+                    indexA++;
+
+                if (offsetA > blockY * maxBlocks || offsetB % maxBlocks > blockX)
+                    break;
+            }
+            if (blocksAdded == 1)
+            {
+                C->list[totalBlocks] = block;
+                C->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
+                totalBlocks++;
+                if (size == totalBlocks)
+                {
+                    size++;
+                    C->list = realloc(C->list, size * sizeof(Matrix *));
+                    C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
+                }
+            }
+        }
     }
 
-    C->csc_idx = c_idx;
-    C->csc_elem = c_elem;
     C->size = A->size;
+    C->totalBlocks = totalBlocks;
+}
+
+int findIndex(BlockedMatrix *mtr, uint32_t indx)
+{
+    return binarySeach(mtr->offsets, 0, mtr->totalBlocks - 1, indx);
+}
+
+uint32_t binarySeach(uint32_t *list, uint32_t left, uint32_t right, uint32_t index)
+{
+    if (right >= left)
+    {
+        int mid = left + (right - left) / 2;
+
+        // If the element is present at the middle
+        // itself
+        if (list[mid] == index)
+            return mid;
+
+        // If element is smaller than mid, then
+        // it can only be present in left subarray
+        if (list[mid] > index)
+            return binarySearch(list, left, mid - 1, index);
+
+        // Else the element can only be present
+        // in right subarray
+        return binarySearch(list, mid + 1, right, index);
+    }
+
+    // We reach here when element is not
+    // present in array
+    return -1;
 }

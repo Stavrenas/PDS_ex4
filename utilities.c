@@ -413,3 +413,86 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
     printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
 }
+
+void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
+{
+    // Function to convert blocked matrix into unblocked csc
+
+    // Allocate memory for unblocked matrix
+    mtr->size = blockedMatrix->size;
+    mtr->csc_idx = (uint32_t *)malloc(sizeof(uint32_t));
+    mtr->csc_elem = (uint32_t *)malloc((mtr->size + 1) * sizeof(uint32_t));
+
+    mtr->csc_elem[0] = 0;
+
+    uint32_t maxBlocks = ceil(mtr->size / blockSize);
+    // Index to iterate over all blocks
+    uint32_t currentBlock = 1;
+
+    // indices showing current row's column indices inside csc_idx
+    int row_start = 0;
+    int row_end = 0;
+
+    // total column indices added to mtr->csc_idx
+    int elements = 0;
+    // total elements allocated for mtr->csc_idx (more than actual)
+    int idx_size = 0;
+
+    // Shows first block of current 'block-row' containing current row
+    int currentRowBlockStart = 0;
+    // Shows how many blocks have been iterated
+    // (used to keep track of first block)
+    int blocksIterated = 0;
+
+    // Construct each row of the unblocked matrix
+    for (int row = 0; row < mtr->size; row++)
+    {
+        // Start counting blocks iterated
+        blocksIterated = 0;
+
+        // Loop through blocks containing current row
+        while (blockedMatrix->offsets[currentBlock] >= floor(row/blockSize) + 1 &&
+        blockedMatrix->offsets[currentBlock] <= floor(row/blockSize) + maxBlocks)
+        {
+            // Check if this is the first block iterated
+            // and keep its index
+            if(blocksIterated == 0) {
+                currentRowBlockStart = currentBlock;
+            }
+
+            // Get column indices of current block's row
+            row_start = blockedMatrix->list[currentBlock]->csc_elem[row];
+            row_end = blockedMatrix->list[currentBlock]->csc_elem[row + 1];
+
+            for (int i = row_start; i < row_end; i++)
+            {
+                mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i];
+                elements++;
+
+                // Reallocate memory if needed
+                if (elements == idx_size)
+                {
+                    idx_size++;
+                    mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(int));
+                }
+            }
+
+            // Go to next block containing current row
+            currentBlock++;
+            blocksIterated++;
+        }
+
+        // Check if current 'block-row' contains next row of mtr
+        // if so then iterate the same blocks
+        if(ceil((row+1)/blockSize) - ceil(row/blockSize) < 1)
+        {
+            currentBlock == currentRowBlockStart;
+        }
+
+        // Save non zero elements of current row
+        mtr->csc_elem[row] = elements;
+    }
+
+    // Set last element
+    mtr->csc_elem[mtr->size] = mtr->size;
+}
