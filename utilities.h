@@ -30,9 +30,9 @@ uint32_t binarySeach(uint32_t* list, uint32_t left, uint32_t right,uint32_t inde
 
 void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
-uint32_t binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index);
+int binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index);
 
-uint32_t findIndex(BlockedMatrix *mtr, uint32_t indx);
+int findIndex(BlockedMatrix *mtr, uint32_t indx);
 
 void blockBMM(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 

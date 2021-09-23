@@ -163,11 +163,8 @@ void clearBlockedMatrix(BlockedMatrix *blockA)
 {
     // Deallocate memory occupied by each block
     for (int i = 0; i < blockA->size; ++i)
-    {
-        free(blockA->list[i]->csc_idx);
-        free(blockA->list[i]->csc_elem);
-        free(blockA->list[i]);
-    }
+        clearMatrix(blockA->list[i]);
+    
 
     // Deallocate memory occupied by blocked matrix data
     free(blockA->list);

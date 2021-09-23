@@ -396,7 +396,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                 blockedMatrix->list[totalBlocks] = block;
                 blockedMatrix->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
-                
+
                 totalBlocks++;
 
                 if (listSize == totalBlocks)
@@ -593,18 +593,17 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
     C->size = A->size;
 }
 
-uint32_t findIndex(BlockedMatrix *mtr, uint32_t indx)
+int findIndex(BlockedMatrix *mtr, uint32_t indx)
 {
-    printf("inside find index\n");
     return binarySearch(mtr->offsets, 0, mtr->totalBlocks - 1, indx);
 }
 
-uint32_t binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index)
+int binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index)
 {
     if (right >= left)
-    {
-        int mid = left + (right - left) / 2;
+    {   
 
+        int mid = left + (right - left) / 2;
         // If the element is present at the middle
         // itself
         if (list[mid] == index)
