@@ -24,9 +24,11 @@ int main(int argc, char **argv)
     Matrix *B = malloc(sizeof(Matrix));
     Matrix *C = malloc(sizeof(Matrix));
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+    BlockedMatrix *blockB = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+   
     char filenameA[] = "12.mtx";
-    char filenameB[] = "12a.mtx";
+    char filenameB[] = "12.mtx";
 
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
@@ -36,12 +38,14 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     blockMatrix(A, 3, blockA);
+    blockMatrix(B, 3, blockB);
 
-    blockBMM(blockA, blockA, blockC);
+    blockBMM(blockA, blockB, blockC);
 
     printf("Time for BlockBMM: %f\n", toc(start));
 
-    printBlockedMatrix(blockC);
+    printBlockedMatrix(blockA);
+
 
     //printMatrix(C);
 
@@ -59,9 +63,9 @@ int main(int argc, char **argv)
 
     // free memory
 
-    clearMatrix(A);
-    clearMatrix(B);
-    clearMatrix(C);
+    // clearMatrix(A);
+    // clearMatrix(B);
+    // clearMatrix(C);
     // clearBlockedMatrix(blockA);
 }
 
@@ -88,27 +92,30 @@ void blockBMM(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
             Matrix *result = (Matrix *)malloc(sizeof(Matrix));
 
             uint32_t indexA, indexB; //find indexes of Ap1 and B1q
-
+            printf("Before find index\n");
             for (int i = 0; i < maxBlocks; i++)
             {
                 indexA = findIndex(A, (blockY - 1) * maxBlocks + i);
                 if (indexA != -1)
                     break; //stop when we find the first nonzero block in row p
             }
-
+            printf("After find index\n");
             for (int i = 0; i < maxBlocks; i++)
             {
                 indexB = findIndex(B, maxBlocks * i + blockX);
                 if (indexB != -1)
                     break; //stop when we find the first nonzero block in column q
             }
+
+            printf("indexA is %d and indexB is %d\n", indexA, indexB);
+
             uint32_t blocksAdded = 0;
             for (int s = 1; s <= maxBlocks; s++)
             {
                 //check if the blocks match
                 uint32_t offsetA = A->offsets[indexA];
                 uint32_t offsetB = B->offsets[indexB];
-
+                printf("OffsetA is %d and OffsetB is %d\n", offsetA, offsetB);
                 if (offsetA % maxBlocks == offsetB / maxBlocks)
                 {
                     cscBMM2(A->list[indexA], B->list[indexB], result);

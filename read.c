@@ -142,7 +142,8 @@ void printMatrix(Matrix *res)
 
 void printBlockedMatrix(BlockedMatrix *res)
 {
-    for (int i = 0; i < res->size; i++)
+    for (int i = 0; i < res->totalBlocks
+    ; i++)
     {
         printf("Block %d: \n", i);
         printf("Offset = %d\n", res->offsets[i]);
@@ -162,11 +163,8 @@ void clearBlockedMatrix(BlockedMatrix *blockA)
 {
     // Deallocate memory occupied by each block
     for (int i = 0; i < blockA->size; ++i)
-    {
-        free(blockA->list[i]->csc_idx);
-        free(blockA->list[i]->csc_elem);
-        free(blockA->list[i]);
-    }
+        clearMatrix(blockA->list[i]);
+    
 
     // Deallocate memory occupied by blocked matrix data
     free(blockA->list);
