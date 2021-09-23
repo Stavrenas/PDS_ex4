@@ -444,6 +444,8 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     // (used to keep track of first block)
     int blocksIterated = 0;
 
+    // Block column offset
+    int blockX = 0;
     // Construct each row of the unblocked matrix
     for (int row = 0; row < mtr->size; row++)
     {
@@ -460,13 +462,16 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
                 currentRowBlockStart = currentBlock;
             }
 
-            // Get column indices of current block's row
-            row_start = blockedMatrix->list[currentBlock]->csc_elem[row];
-            row_end = blockedMatrix->list[currentBlock]->csc_elem[row + 1];
+            // Get column indices of current block's rowls
+            row_start = blockedMatrix->list[currentBlock]->csc_elem[row % blockSize];
+            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row + 1) % blockSize];
 
             for (int i = row_start; i < row_end; i++)
             {
-                mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i];
+                // Find block column offset (blockX)
+                blockX = (blockedMatrix->offsets[currentBlock] - 1) % blockSize + 1;
+                // Save column index taking blockX offset into account
+                mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i] + (blockX-1)*blockSize;
                 elements++;
 
                 // Reallocate memory if needed
