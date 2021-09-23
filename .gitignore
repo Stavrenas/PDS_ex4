@@ -1,0 +1,9 @@
+# Object files
+*.o
+*.mtx
+*.txt
+*.m
+/.vscode
+v0
+v1
+test
