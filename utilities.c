@@ -495,8 +495,4 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
     // Set last element
     mtr->csc_elem[mtr->size] = mtr->size;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> a04dd4ba286b2b02891c6d39d9ab4e7e8f50e657
