@@ -337,9 +337,13 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
     blockedMatrix->offsets = (uint32_t *)malloc(1 * sizeof(uint32_t)); //maximum size of blocks
+    blockedMatrix->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
 
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
+        // Save first block of current row (blockY)
+        blockedMatrix->row_ptr[blockY-1] = totalBlocks;
+
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
 
@@ -413,14 +417,19 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     blockedMatrix->totalBlocks = totalBlocks;
 
     printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
+    printf("Start of each row:\n");
+    for (int i = 0; i < maxBlocks; ++i)
+    {
+        printf("row: %d, block: %d\n", i+1, blockedMatrix->row_ptr[i]);
+    }
 }
 
 void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
     // Function to convert blocked matrix into unblocked csc
 
-    // Allocate memory for unblocked matrix
     mtr->size = blockedMatrix->size;
+    // Allocate memory for unblocked matrix
     mtr->csc_idx = (uint32_t *)malloc(sizeof(uint32_t));
     mtr->csc_elem = (uint32_t *)malloc((mtr->size + 1) * sizeof(uint32_t));
 
@@ -428,41 +437,27 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
     uint32_t maxBlocks = ceil(mtr->size / blockSize);
     // Index to iterate over all blocks
-    uint32_t currentBlock = 1;
+    uint32_t currentBlock = 0; // blockedMatrix->row_ptr[0]
 
-    // indices showing current row's column indices inside csc_idx
+    // Indices showing current row's column indices inside csc_idx
     int row_start = 0;
     int row_end = 0;
 
-    // total column indices added to mtr->csc_idx
+    // Total column indices added to mtr->csc_idx
     int elements = 0;
-    // total elements allocated for mtr->csc_idx (more than actual)
-    int idx_size = 0;
-
-    // Shows first block of current 'block-row' containing current row
-    int currentRowBlockStart = 0;
-    // Shows how many blocks have been iterated
-    // (used to keep track of first block)
-    int blocksIterated = 0;
+    // Total elements allocated for mtr->csc_idx (more than actual)
+    int idx_size = 1;
 
     // Block column offset
     int blockX = 0;
+
     // Construct each row of the unblocked matrix
     for (int row = 0; row < mtr->size; row++)
     {
-        // Start counting blocks iterated
-        blocksIterated = 0;
-
         // Loop through blocks containing current row
         while (blockedMatrix->offsets[currentBlock] >= floor(row/blockSize) + 1 &&
         blockedMatrix->offsets[currentBlock] <= floor(row/blockSize) + maxBlocks)
         {
-            // Check if this is the first block iterated
-            // and keep its index
-            if(blocksIterated == 0) {
-                currentRowBlockStart = currentBlock;
-            }
-
             // Get column indices of current block's rowls
             row_start = blockedMatrix->list[currentBlock]->csc_elem[row % blockSize];
             row_end = blockedMatrix->list[currentBlock]->csc_elem[(row + 1) % blockSize];
@@ -478,21 +473,23 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
                 // Reallocate memory if needed
                 if (elements == idx_size)
                 {
-                    idx_size++;
+                    idx_size *= 2;
                     mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(int));
                 }
             }
 
             // Go to next block containing current row
             currentBlock++;
-            blocksIterated++;
         }
 
         // Check if current 'block-row' contains next row of mtr
         // if so then iterate the same blocks
         if(ceil((row+1)/blockSize) - ceil(row/blockSize) < 1)
         {
-            currentBlock == currentRowBlockStart;
+            currentBlock = blockedMatrix->row_ptr[row/blockSize];
+        } else // Go to the first block of the next 'block-row'
+        {
+            currentBlock = blockedMatrix->row_ptr[(row+1)/blockSize];
         }
 
         // Save non zero elements of current row
@@ -501,6 +498,8 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
     // Set last element
     mtr->csc_elem[mtr->size] = mtr->size;
+
+    printf("%d\n", elements);
 }
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
