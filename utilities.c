@@ -417,11 +417,6 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     blockedMatrix->totalBlocks = totalBlocks;
 
     printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
-    printf("Start of each row:\n");
-    for (int i = 0; i < maxBlocks; ++i)
-    {
-        printf("row: %d, block: %d\n", i+1, blockedMatrix->row_ptr[i]);
-    }
 }
 
 void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
@@ -455,8 +450,9 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     for (int row = 0; row < mtr->size; row++)
     {
         // Loop through blocks containing current row
-        while (blockedMatrix->offsets[currentBlock] >= floor(row/blockSize) + 1 &&
-        blockedMatrix->offsets[currentBlock] <= floor(row/blockSize) + maxBlocks)
+        // check offset to see if a block contains current row
+        while (blockedMatrix->offsets[currentBlock] >= (floor(row/blockSize)*maxBlocks + 1) &&
+        blockedMatrix->offsets[currentBlock] <= (floor(row/blockSize)*maxBlocks + maxBlocks))
         {
             // Get column indices of current block's rowls
             row_start = blockedMatrix->list[currentBlock]->csc_elem[row % blockSize];
@@ -498,8 +494,6 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
     // Set last element
     mtr->csc_elem[mtr->size] = mtr->size;
-
-    printf("%d\n", elements);
 }
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
@@ -526,7 +520,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 
         start_b = B->csc_elem[row - 1];
         end_b = B->csc_elem[row];
-        
+
         printf("start_a is %d , start_b is %d, end_a is %d and end_b is %d\n",start_a,start_b,end_a,end_b);
         for (uint32_t a = start_a, b = start_b;;)
         { //go to each element in row of mtr A and mtr B
