@@ -9,7 +9,6 @@
 #include "utilities.h"
 #include "mmio.h"
 
-
 void swap(double *n1, double *n2)
 {
     double temp = *n1;
@@ -75,6 +74,7 @@ double toc(struct timeval begin)
 
 void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 {
+    //allocate memory for result mult
     uint32_t *c_elem, *c_idx, elements, *temp, indexB, indexA, last;
 
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
@@ -88,20 +88,14 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
     last = -1;
     elements = 0;
 
-    int perc = 0;
+    //variables used in for loops
     uint32_t sizeA, sizeB, start_a, end_a, start_b, end_b;
 
     sizeA = A->size;
     sizeB = B->size;
+
     for (uint32_t row = 1; row <= sizeA; row++)
     { //go to each row of mtr A
-
-        // if (row * 100 / A->size != perc)
-        // {
-        //     printf("%d%% \n", perc);
-        //     perc = row * 100 / A->size;
-        // }
-        //printf("Row %d of %d\n",row,A->size);
 
         for (uint32_t col = 1; col <= sizeB; col++)
         { //go to each col of mtr Β
@@ -116,7 +110,7 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
                 end_b = B->csc_elem[indexA];
 
                 for (uint32_t b = start_b; b < end_b; b++)
-                { //check if there is a match in col "col"of mtr B
+                { //check if there is a match in col "col" of mtr B
                     indexB = B->csc_idx[b];
 
                     if (indexB > col)
@@ -134,7 +128,7 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
                             c_idx[elements] = col;
                             elements++;
                             if (elements == idx_size)
-                            {
+                            { //faster realloc than multMatrix
                                 idx_size *= 2;
                                 c_idx = realloc(c_idx, idx_size * sizeof(uint32_t));
                             }
@@ -157,6 +151,7 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 
 void multMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
+    //alocate memory for result matrix
     uint32_t *c_elem, *c_idx, elements, *temp, indexB, last;
 
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
@@ -179,12 +174,12 @@ void multMatrix(Matrix *A, Matrix *B, Matrix *C)
         { //go to each col of mtr Β
 
             for (uint32_t a = A->csc_elem[row - 1]; a < A->csc_elem[row]; a++)
-            { //go to each element in row "row" of mtr A
+            { //go to each element in "row"-th row  of mtr A
 
                 uint32_t indexA = A->csc_idx[a];
 
                 for (uint32_t b = B->csc_elem[indexA - 1]; b < B->csc_elem[indexA]; b++)
-                { //check if there is a match in col "col"of mtr B
+                { //check if there is a match in col "col" of mtr B
                     indexB = B->csc_idx[b];
 
                     if (indexB > col)
@@ -213,7 +208,8 @@ void multMatrix(Matrix *A, Matrix *B, Matrix *C)
         c_elem[row] = c_elem[row - 1] + elements;
 
         if (elements != 0)
-        {
+        { //add the indexes and realloc
+
             idx_size += elements * sizeof(uint32_t); //in bytes
             c_idx = realloc(c_idx, idx_size);
             end += elements;
@@ -335,6 +331,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     uint32_t totalBlocks = 0;
     uint32_t listSize = 1; //also equals to offset size
 
+    //initialize result matrix
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
     blockedMatrix->offsets = (uint32_t *)malloc(1 * sizeof(uint32_t)); //maximum size of blocks
     blockedMatrix->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
@@ -342,11 +339,12 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
         // Save first block of current row (blockY)
-        blockedMatrix->row_ptr[blockY-1] = totalBlocks;
+        blockedMatrix->row_ptr[blockY - 1] = totalBlocks;
 
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
 
+            //initialize block to be created
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             int *block_idx, *block_elem, elements, idx_size;
 
@@ -357,7 +355,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
             block_elem[0] = 0;
             elements = 0;
 
-            for (int row = (blockY - 1) * blockSize + 1; row < blockY * blockSize + 1; row++)
+            for (int row = (blockY - 1) * blockSize + 1; row < blockY * blockSize + 1; row++) //calculate row from vertical and horizontal coordinates
             {
                 // Check if row exceeds matrix size
                 if (row <= mtr->size)
@@ -367,12 +365,13 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 
                     for (int j = start; j < end; j++)
                     {
-
+                        //break if we exceed block boundaries
                         if (mtr->csc_idx[j] > blockX * blockSize) //check if it is worth it
                             break;
 
+                        //check if the element is inside the block
                         else if (mtr->csc_idx[j] <= blockX * blockSize && mtr->csc_idx[j] > (blockX - 1) * blockSize)
-                        {
+                        { //add it
 
                             block_idx[elements] = mtr->csc_idx[j] - (blockX - 1) * blockSize;
                             elements++;
@@ -384,16 +383,17 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
                             }
                         }
                     }
-
+                    //update csc_elem
                     block_elem[row - (blockY - 1) * blockSize] = elements;
                 }
 
-                else // zero padding vertically
+                else // if a row of a block is outside the matrix, we assume it contains only zero elements so we only update csc_elem
                     block_elem[row - (blockY - 1) * blockSize] = block_elem[row - (blockY - 1) * blockSize - 1];
             }
 
             if (elements != 0)
-            {
+            { //create and add block to the list
+
                 block->size = blockSize;
                 block->csc_idx = block_idx;
                 block->csc_elem = block_elem;
@@ -417,11 +417,10 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     blockedMatrix->totalBlocks = totalBlocks;
 
     printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
-    printf("Start of each row:\n");
-    for (int i = 0; i < maxBlocks; ++i)
-    {
-        printf("row: %d, block: %d\n", i+1, blockedMatrix->row_ptr[i]);
-    }
+
+    // printf("Start of each row:\n");
+    // for (int i = 0; i < maxBlocks; ++i)
+    //     printf("row: %d, block: %d\n", i + 1, blockedMatrix->row_ptr[i]);
 }
 
 void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
@@ -455,8 +454,8 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     for (int row = 0; row < mtr->size; row++)
     {
         // Loop through blocks containing current row
-        while (blockedMatrix->offsets[currentBlock] >= floor(row/blockSize) + 1 &&
-        blockedMatrix->offsets[currentBlock] <= floor(row/blockSize) + maxBlocks)
+        while (blockedMatrix->offsets[currentBlock] >= floor(row / blockSize) + 1 &&
+               blockedMatrix->offsets[currentBlock] <= floor(row / blockSize) + maxBlocks)
         {
             // Get column indices of current block's rowls
             row_start = blockedMatrix->list[currentBlock]->csc_elem[row % blockSize];
@@ -467,7 +466,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
                 // Find block column offset (blockX)
                 blockX = (blockedMatrix->offsets[currentBlock] - 1) % blockSize + 1;
                 // Save column index taking blockX offset into account
-                mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i] + (blockX-1)*blockSize;
+                mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i] + (blockX - 1) * blockSize;
                 elements++;
 
                 // Reallocate memory if needed
@@ -484,12 +483,13 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
         // Check if current 'block-row' contains next row of mtr
         // if so then iterate the same blocks
-        if(ceil((row+1)/blockSize) - ceil(row/blockSize) < 1)
+        if (ceil((row + 1) / blockSize) - ceil(row / blockSize) < 1)
         {
-            currentBlock = blockedMatrix->row_ptr[row/blockSize];
-        } else // Go to the first block of the next 'block-row'
+            currentBlock = blockedMatrix->row_ptr[row / blockSize];
+        }
+        else // Go to the first block of the next 'block-row'
         {
-            currentBlock = blockedMatrix->row_ptr[(row+1)/blockSize];
+            currentBlock = blockedMatrix->row_ptr[(row + 1) / blockSize];
         }
 
         // Save non zero elements of current row
@@ -506,30 +506,28 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, idx_size;
 
+    //initialize result mult
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
     c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
-
-    idx_size = 1;
+    idx_size = 1; //used in realloc
     c_elem[0] = 0;
     elements = 0;
 
+    //variables used in for loops
     uint32_t size, start_a, end_a, start_b, end_b, indexA, indexB;
-
     size = A->size;
 
     for (uint32_t row = 1; row <= size; row++)
-    { //go to each row of mtr A
-        //printf("row %d\n",row);
+    { //go to each row of mtr C
 
         start_a = A->csc_elem[row - 1];
         end_a = A->csc_elem[row];
 
         start_b = B->csc_elem[row - 1];
         end_b = B->csc_elem[row];
-        
-        //printf("start_a is %d , start_b is %d, end_a is %d and end_b is %d\n",start_a,start_b,end_a,end_b);
+
         for (uint32_t a = start_a, b = start_b;;)
-        { //go to each element in row of mtr A and mtr B
+        { //  merge  current row of A and  B
 
             if (a == end_a && b == end_b)
                 break;
@@ -538,16 +536,16 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                 indexA = A->csc_idx[a];
                 indexB = B->csc_idx[b];
 
-                //printf("a is %d and b is %d, indexA is %d and indexB is %d\n", a, b, indexA, indexB);
-
                 if (indexA < indexB)
                 {
+                    //check if row has elements
                     if (a != end_a)
                     {
                         c_idx[elements] = indexA;
                         elements++;
                         a++;
                     }
+                    //check if row has elements
                     else if (b != end_b)
                     {
                         c_idx[elements] = indexB;
@@ -558,12 +556,14 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 
                 else if (indexA > indexB)
                 {
+                    //check if row has elements
                     if (b != end_b)
                     {
                         c_idx[elements] = indexB;
                         elements++;
                         b++;
                     }
+                    //check if row has elements
                     else if (a != end_a)
                     {
                         c_idx[elements] = indexA;
@@ -573,7 +573,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                 }
 
                 else
-                {
+                { //if indexA = indexB
                     c_idx[elements] = indexB;
                     elements++;
                     if (a != end_a)
@@ -600,6 +600,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 
 int findIndex(BlockedMatrix *mtr, uint32_t indx)
 {
+    //check if a block with offset = indx exists
     return binarySearch(mtr->offsets, 0, mtr->totalBlocks - 1, indx);
 }
 
@@ -637,7 +638,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     uint32_t maxBlocks = ceil(A->size / blockSize);
 
     size = 1;
-    totalBlocks = 0; // LOL LOL KILL ME
+    totalBlocks = 0;
 
     //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
@@ -659,7 +660,6 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
             for (int i = 0; i <= block->size; i++)
                 block->csc_elem[i] = 0;
-
 
             //find indexes of Ap1 and B1q
             uint32_t indexA, indexB;
@@ -709,10 +709,10 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     {
                         indexB = findIndex(B, offsetB + maxBlocks);
                         if (indexB != -1)
-                            break; 
+                            break;
                     }
 
-                    indexA++;
+                    indexA++; //go to the next block in the same line of A
                 }
 
                 else if (sA > sB)
@@ -722,14 +722,13 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     {
                         indexB = findIndex(B, offsetB + maxBlocks);
                         if (indexB != -1)
-                            break; 
+                            break;
                     }
                 }
 
                 else if (sA < sB)
                     indexA++; //go to the next block in the same line of A
             }
-
 
             // if the mult results in a nonzero block, add it to the result matrix
             if (block->csc_elem[block->size] != 0)
