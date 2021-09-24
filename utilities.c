@@ -473,7 +473,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
                 // Reallocate memory if needed
                 if (elements == idx_size)
                 {
-                    idx_size *= 2;
+                    idx_size++;
                     mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(int));
                 }
             }
