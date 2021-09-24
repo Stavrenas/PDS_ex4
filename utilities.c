@@ -73,7 +73,7 @@ double toc(struct timeval begin)
     return (stime);
 }
 
-void cscBMM2(Matrix *A, Matrix *B, Matrix *C)
+void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, *temp, indexB, indexA, last;
 
@@ -155,7 +155,7 @@ void cscBMM2(Matrix *A, Matrix *B, Matrix *C)
     C->size = A->size;
 }
 
-void cscBMM(Matrix *A, Matrix *B, Matrix *C)
+void multMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, *temp, indexB, last;
 
@@ -228,7 +228,7 @@ void cscBMM(Matrix *A, Matrix *B, Matrix *C)
     C->size = A->size;
 }
 
-void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C)
+void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *elements, *c_idx;
 
@@ -526,7 +526,8 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 
         start_b = B->csc_elem[row - 1];
         end_b = B->csc_elem[row];
-
+        
+        printf("start_a is %d , start_b is %d, end_a is %d and end_b is %d\n",start_a,start_b,end_a,end_b);
         for (uint32_t a = start_a, b = start_b;;)
         { //go to each element in row of mtr A and mtr B
 
@@ -547,7 +548,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                         elements++;
                         a++;
                     }
-                    else
+                    else if (b != end_b)
                     {
                         c_idx[elements] = indexB;
                         elements++;
@@ -563,7 +564,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
                         elements++;
                         b++;
                     }
-                    else
+                    else if (a != end_a)
                     {
                         c_idx[elements] = indexA;
                         elements++;
