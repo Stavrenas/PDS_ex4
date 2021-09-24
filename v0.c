@@ -70,7 +70,9 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     uint32_t maxBlocks = ceil(A->size / blockSize);
 
     size = 1;
-    totalBlocks = 0;   // LOL LOL KILL ME
+    totalBlocks = 0; // LOL LOL KILL ME
+
+    //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
 
@@ -78,29 +80,29 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     {
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
-            //printf("Row %d Col %d\n", blockY, blockX);
             //Create block: Cp,q (p = BlockY, q = BlockX)
 
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
 
+            //initialize block
             block->csc_elem = (uint32_t *)malloc((block->size + 1) * sizeof(uint32_t));
             block->csc_idx = (uint32_t *)malloc((0) * sizeof(uint32_t));
             block->size = A->list[0]->size; //get blocksize
 
-            //initialize block
             for (int i = 0; i <= block->size; i++)
                 block->csc_elem[i] = 0;
 
-            uint32_t indexA, indexB; //find indexes of Ap1 and B1q
 
+            //find indexes of Ap1 and B1q
+            uint32_t indexA, indexB;
             for (int i = 1; i <= maxBlocks; i++)
             {
                 indexA = findIndex(A, (blockY - 1) * maxBlocks + i);
                 if (indexA != -1)
                     break; //stop when we find the first nonzero block in row p
             }
-            //printf("After find index\n");
+
             for (int i = 1; i <= maxBlocks; i++)
             {
                 indexB = findIndex(B, maxBlocks * (i - 1) + blockX);
@@ -108,10 +110,11 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     break; //stop when we find the first nonzero block in column q
             }
 
-            //printf("indexA is %d and indexB is %d\n", indexA, indexB);
-
+            //maxBlocks is the maximum number of mults for Cp,q. Variable s is not used
             for (int s = 1; s <= maxBlocks; s++)
             {
+
+                //if either block does not exist
                 if (indexA == -1 || indexB == -1)
                     break;
 
@@ -125,64 +128,49 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                 if (indexB > B->totalBlocks || indexA > A->totalBlocks)
                     break;
 
-                //printf("OffsetA is %d and OffsetB is %d\n", offsetA, offsetB);
-
                 //check if the blocks match
-                uint32_t sA = (offsetA-1) % maxBlocks;
+                uint32_t sA = (offsetA - 1) % maxBlocks;
                 uint32_t sB = floor((offsetB - 1) / maxBlocks);
 
                 if (sA == sB)
                 {
-                    // printf("s=%d\n", s);
-
-                    //printf("****Multipling A: %d with B: %d ****", offsetA, offsetB);
-                    // printf("A\n");
-                    // printMatrix(A->list[indexA]);
-                    // printf("B\n");
-                    // printMatrix(B->list[indexB]);
-
                     multMatrix2(A->list[indexA], B->list[indexB], result);
-
-                    // printf("result\n");
-                    // printMatrix(result);
-                    // printf("Block\n");
-                    // printMatrix(block);
-
                     addMatrix(result, block, block);
 
-                    // printf("Block\n");
-                    // printMatrix(block);
-                    //printf("(cool)\n");
-
-
+                    //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
                         indexB = findIndex(B, offsetB + maxBlocks);
                         if (indexB != -1)
-                            break; //stop when we find the first nonzero block in column q
+                            break; 
                     }
 
                     indexA++;
                 }
+
                 else if (sA > sB)
                 {
+                    //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
                         indexB = findIndex(B, offsetB + maxBlocks);
                         if (indexB != -1)
-                            break; //stop when we find the first nonzero block in column q
+                            break; 
                     }
                 }
 
-                else if (sA  < sB)
-                    indexA++; //go to the next block in the same line
+                else if (sA < sB)
+                    indexA++; //go to the next block in the same line of A
             }
 
+
+            // if the mult results in a nonzero block, add it to the result matrix
             if (block->csc_elem[block->size] != 0)
             {
                 C->list[totalBlocks] = block;
                 C->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
                 totalBlocks++;
+
                 if (size == totalBlocks)
                 {
                     size++;
@@ -190,7 +178,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            //free(result);
+            free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
     C->size = A->size;
