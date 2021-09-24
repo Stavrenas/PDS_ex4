@@ -42,12 +42,12 @@ int main(int argc, char **argv)
 
     multMatrix(A, B, C);
     blockMatrix(C, 4, blockResult);
-    //printf("====BMM Result====\n\n");
-    //printBlockedMatrix(blockResult);
+    printf("====BMM Result====\n\n");
+    printBlockedMatrix(blockResult);
 
     multBlockedMatrix(blockA, blockB, blockC);
     printf("====BlockBMM Result====\n");
-    //printBlockedMatrix(blockC);
+    printBlockedMatrix(blockC);
 
     //saveMatrix(C, "mycielskianPARALLEL.txt");
 
@@ -70,6 +70,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     uint32_t maxBlocks = ceil(A->size / blockSize);
 
     size = 1;
+    totalBlocks = 0;   // LOL LOL KILL ME
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
 
@@ -108,7 +109,6 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
             }
 
             //printf("indexA is %d and indexB is %d\n", indexA, indexB);
-            uint32_t blocksAdded = 0;
 
             for (int s = 1; s <= maxBlocks; s++)
             {
@@ -135,7 +135,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                 {
                     // printf("s=%d\n", s);
 
-                    printf("****Multipling A: %d with B: %d ****", offsetA, offsetB);
+                    //printf("****Multipling A: %d with B: %d ****", offsetA, offsetB);
                     // printf("A\n");
                     // printMatrix(A->list[indexA]);
                     // printf("B\n");
@@ -152,7 +152,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
                     // printf("Block\n");
                     // printMatrix(block);
-                    printf("(cool)\n");
+                    //printf("(cool)\n");
 
 
                     for (int i = 1; i <= maxBlocks; i++)
@@ -163,7 +163,6 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     }
 
                     indexA++;
-                    blocksAdded = 1;
                 }
                 else if (sA > sB)
                 {
@@ -179,7 +178,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     indexA++; //go to the next block in the same line
             }
 
-            if (blocksAdded == 1)
+            if (block->csc_elem[block->size] != 0)
             {
                 C->list[totalBlocks] = block;
                 C->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
@@ -191,7 +190,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            free(result);
+            //free(result);
         }
     }
     C->size = A->size;
