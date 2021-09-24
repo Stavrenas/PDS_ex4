@@ -460,21 +460,20 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     {
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
-        while (blockedMatrix->offsets[currentBlock] >= ((row-1) / blockSize) * maxBlocks + 1 &&
-               blockedMatrix->offsets[currentBlock] <= ((row-1) / blockSize) * maxBlocks + maxBlocks)
+        while (blockedMatrix->offsets[currentBlock] >= ((row - 1) / blockSize) * maxBlocks + 1 &&
+               blockedMatrix->offsets[currentBlock] <= ((row - 1) / blockSize) * maxBlocks + maxBlocks)
         {
             // Get column indices of current block's rowls
-            row_start = blockedMatrix->list[currentBlock]->csc_elem[(row-1) % blockSize];
-            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row-1) % blockSize +1 ];
+            row_start = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize];
+            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize + 1];
 
             for (int i = row_start; i < row_end; i++)
             {
                 // Find block column offset (blockX)
-                blockX = (blockedMatrix->offsets[currentBlock] - 1) % blockSize + 1;
+                blockX = (blockedMatrix->offsets[currentBlock]-1) % maxBlocks + 1;
                 // Save column index taking blockX offset into account
                 mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i] + (blockX - 1) * blockSize;
                 elements++;
-
                 // Reallocate memory if needed
                 if (elements == idx_size)
                 {
@@ -489,21 +488,15 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
         // Check if current 'block-row' contains next row of mtr
         // if so then iterate the same blocks
-        if (ceil(row  / blockSize) - ceil((row-1) / blockSize) < 1)
-        {
+        if (ceil(row / blockSize) - ceil((row - 1) / blockSize) < 1)
             currentBlock = blockedMatrix->row_ptr[row / blockSize];
-        }
+
         else // Go to the first block of the next 'block-row'
-        {
             currentBlock = blockedMatrix->row_ptr[(row + 1) / blockSize];
-        }
 
         // Save non zero elements of current row
         mtr->csc_elem[row] = elements;
     }
-
-    // Set last element
-    mtr->csc_elem[mtr->size] = elements;
 }
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
