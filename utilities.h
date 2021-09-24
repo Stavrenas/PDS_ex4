@@ -16,11 +16,11 @@ struct timeval tic();
 
 double toc(struct timeval begin);
 
-void cscBMM(Matrix *A, Matrix *B, Matrix *C);
+void multMatrix(Matrix *A, Matrix *B, Matrix *C);
 
-void cscBMM2(Matrix *A, Matrix *B, Matrix *C);
+void multMatrix2(Matrix *A, Matrix *B, Matrix *C);
 
-void cscBMMparallel(Matrix *A, Matrix *B, Matrix *C);
+void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C);
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
@@ -34,6 +34,6 @@ int binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index);
 
 int findIndex(BlockedMatrix *mtr, uint32_t indx);
 
-void blockBMM(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
+void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
 #endif //UTILITIES_H
