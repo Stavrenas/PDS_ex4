@@ -460,12 +460,12 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     {
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
-        while (blockedMatrix->offsets[currentBlock] >= (floor((row-1) / blockSize) * maxBlocks + 1) &&
-               blockedMatrix->offsets[currentBlock] <= (floor((row-1) / blockSize) * maxBlocks + maxBlocks))
+        while (blockedMatrix->offsets[currentBlock] >= ((row-1) / blockSize) * maxBlocks + 1 &&
+               blockedMatrix->offsets[currentBlock] <= ((row-1) / blockSize) * maxBlocks + maxBlocks)
         {
             // Get column indices of current block's rowls
             row_start = blockedMatrix->list[currentBlock]->csc_elem[(row-1) % blockSize];
-            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row) % blockSize];
+            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row-1) % blockSize +1 ];
 
             for (int i = row_start; i < row_end; i++)
             {
@@ -479,7 +479,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
                 if (elements == idx_size)
                 {
                     idx_size++;
-                    mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(int));
+                    mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(uint32_t));
                 }
             }
 
@@ -503,7 +503,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     }
 
     // Set last element
-    mtr->csc_elem[mtr->size] = mtr->size;
+    mtr->csc_elem[mtr->size] = elements;
 }
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)

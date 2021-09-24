@@ -36,10 +36,11 @@ int main(int argc, char **argv)
 
     blockMatrix(A, 4, blockA);
     blockMatrix(B, 4, blockB);
+    printf("Normal matrix\n");
     printMatrix(A);
     unblockMatrix(C, 4, blockA);
+    printf("Blocked and unblocked matrix\n");
     printMatrix(C);
-    
 
     MPI_Finalize();
 
@@ -50,5 +51,3 @@ int main(int argc, char **argv)
     // clearMatrix(C);
     // clearBlockedMatrix(blockA);
 }
-
-
