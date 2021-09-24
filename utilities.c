@@ -527,7 +527,7 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
         start_b = B->csc_elem[row - 1];
         end_b = B->csc_elem[row];
         
-        printf("start_a is %d , start_b is %d, end_a is %d and end_b is %d\n",start_a,start_b,end_a,end_b);
+        //printf("start_a is %d , start_b is %d, end_a is %d and end_b is %d\n",start_a,start_b,end_a,end_b);
         for (uint32_t a = start_a, b = start_b;;)
         { //go to each element in row of mtr A and mtr B
 

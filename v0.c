@@ -29,24 +29,24 @@ int main(int argc, char **argv)
     BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     char filenameA[] = "12.mtx";
-    char filenameB[] = "12a.mtx";
+    char filenameB[] = "12.mtx";
 
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
 
-    addMatrix(A, B, C);
-    printMatrix(C);
+    // addMatrix(A, B, C);
+    // printMatrix(C);
 
-    // blockMatrix(A, 4, blockA);
-    // blockMatrix(B, 4, blockB);
+    blockMatrix(A, 4, blockA);
+    blockMatrix(B, 4, blockB);
 
-    // multMatrix(A, B, C);
-    // blockMatrix(C, 4, blockResult);
-    // printf("====BMM Result====\n\n");
-    // printBlockedMatrix(blockResult);
+    multMatrix(A, B, C);
+    blockMatrix(C, 4, blockResult);
+    //printf("====BMM Result====\n\n");
+    //printBlockedMatrix(blockResult);
 
-    // multBlockedMatrix(blockA, blockB, blockC);
-    // printf("====BlockBMM Result====\n");
+    multBlockedMatrix(blockA, blockB, blockC);
+    printf("====BlockBMM Result====\n");
     //printBlockedMatrix(blockC);
 
     //saveMatrix(C, "mycielskianPARALLEL.txt");
@@ -77,7 +77,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     {
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
-            printf("Row %d Col %d\n", blockY, blockX);
+            //printf("Row %d Col %d\n", blockY, blockX);
             //Create block: Cp,q (p = BlockY, q = BlockX)
 
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
@@ -107,7 +107,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     break; //stop when we find the first nonzero block in column q
             }
 
-            printf("indexA is %d and indexB is %d\n", indexA, indexB);
+            //printf("indexA is %d and indexB is %d\n", indexA, indexB);
             uint32_t blocksAdded = 0;
 
             for (int s = 1; s <= maxBlocks; s++)
@@ -125,14 +125,17 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                 if (indexB > B->totalBlocks || indexA > A->totalBlocks)
                     break;
 
-                printf("OffsetA is %d and OffsetB is %d\n", offsetA, offsetB);
+                //printf("OffsetA is %d and OffsetB is %d\n", offsetA, offsetB);
 
                 //check if the blocks match
-                if (offsetA % maxBlocks == floor((offsetB - 1) / maxBlocks) + 1)
+                uint32_t sA = (offsetA-1) % maxBlocks;
+                uint32_t sB = floor((offsetB - 1) / maxBlocks);
+
+                if (sA == sB)
                 {
                     // printf("s=%d\n", s);
 
-                    printf("****Multipling A: %d with B: %d ****\n", offsetA, offsetB);
+                    printf("****Multipling A: %d with B: %d ****", offsetA, offsetB);
                     // printf("A\n");
                     // printMatrix(A->list[indexA]);
                     // printf("B\n");
@@ -149,6 +152,8 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
                     // printf("Block\n");
                     // printMatrix(block);
+                    printf("(cool)\n");
+
 
                     for (int i = 1; i <= maxBlocks; i++)
                     {
@@ -156,10 +161,11 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                         if (indexB != -1)
                             break; //stop when we find the first nonzero block in column q
                     }
+
                     indexA++;
                     blocksAdded = 1;
                 }
-                else if (offsetA % maxBlocks > floor(offsetB / maxBlocks) + 1)
+                else if (sA > sB)
                 {
                     for (int i = 1; i <= maxBlocks; i++)
                     {
@@ -169,7 +175,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     }
                 }
 
-                else if (offsetA % maxBlocks < floor(offsetB / maxBlocks) + 1)
+                else if (sA  < sB)
                     indexA++; //go to the next block in the same line
             }
 
