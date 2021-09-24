@@ -34,24 +34,13 @@ int main(int argc, char **argv)
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
 
-    // addMatrix(A, B, C);
-    // printMatrix(C);
-
     blockMatrix(A, 4, blockA);
     blockMatrix(B, 4, blockB);
+    printMatrix(A);
+    unblockMatrix(C, 4, blockA);
+    printMatrix(C);
+    
 
-    multMatrix(A, B, C);
-    blockMatrix(C, 4, blockResult);
-    printf("====BMM Result====\n\n");
-    printBlockedMatrix(blockResult);
-
-    multBlockedMatrix(blockA, blockB, blockC);
-    printf("====BlockBMM Result====\n");
-    printBlockedMatrix(blockC);
-
-    //saveMatrix(C, "mycielskianPARALLEL.txt");
-
-    //printf("Hello world from processor %s, rank %d out of %d processors\n",processor_name, world_rank, world_size);
     MPI_Finalize();
 
     // free memory

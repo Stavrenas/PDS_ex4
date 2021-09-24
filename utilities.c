@@ -456,16 +456,16 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
     int blockX = 0;
 
     // Construct each row of the unblocked matrix
-    for (int row = 0; row < mtr->size; row++)
+    for (int row = 1; row <= mtr->size; row++)
     {
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
-        while (blockedMatrix->offsets[currentBlock] >= (floor(row / blockSize) * maxBlocks + 1) &&
-               blockedMatrix->offsets[currentBlock] <= (floor(row / blockSize) * maxBlocks + maxBlocks))
+        while (blockedMatrix->offsets[currentBlock] >= (floor((row-1) / blockSize) * maxBlocks + 1) &&
+               blockedMatrix->offsets[currentBlock] <= (floor((row-1) / blockSize) * maxBlocks + maxBlocks))
         {
             // Get column indices of current block's rowls
-            row_start = blockedMatrix->list[currentBlock]->csc_elem[row % blockSize];
-            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row + 1) % blockSize];
+            row_start = blockedMatrix->list[currentBlock]->csc_elem[(row-1) % blockSize];
+            row_end = blockedMatrix->list[currentBlock]->csc_elem[(row) % blockSize];
 
             for (int i = row_start; i < row_end; i++)
             {
@@ -489,7 +489,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
         // Check if current 'block-row' contains next row of mtr
         // if so then iterate the same blocks
-        if (ceil((row + 1) / blockSize) - ceil(row / blockSize) < 1)
+        if (ceil(row  / blockSize) - ceil((row-1) / blockSize) < 1)
         {
             currentBlock = blockedMatrix->row_ptr[row / blockSize];
         }
