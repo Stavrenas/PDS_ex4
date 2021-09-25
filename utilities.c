@@ -651,9 +651,9 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
             Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
 
             //initialize block
+            block->size = A->list[0]->size; //get blocksize
             block->csc_elem = (uint32_t *)malloc((block->size + 1) * sizeof(uint32_t));
             block->csc_idx = (uint32_t *)malloc((0) * sizeof(uint32_t));
-            block->size = A->list[0]->size; //get blocksize
 
             for (int i = 0; i <= block->size; i++)
                 block->csc_elem[i] = 0;
