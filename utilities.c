@@ -85,7 +85,7 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
     uint32_t end = 0;
 
     c_elem[0] = 0;
-    last = -1;
+
     elements = 0;
 
     //variables used in for loops
@@ -95,13 +95,14 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
     sizeB = B->size;
 
     for (uint32_t row = 1; row <= sizeA; row++)
-    { //go to each row of mtr A
-
+    {              //go to each row of mtr A
+        last = -1; //last element added in each row
         for (uint32_t col = 1; col <= sizeB; col++)
         { //go to each col of mtr Β
 
             start_a = A->csc_elem[row - 1];
             end_a = A->csc_elem[row];
+
             for (uint32_t a = start_a; a < end_a; a++)
             { //go to each element in row "row" of mtr A
 
@@ -118,6 +119,7 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 
                     else if (indexB == col)
                     {
+
                         if (last == col) //check if the element is already added
                         {
                             //do not add it
@@ -125,8 +127,10 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 
                         else
                         {
+
                             c_idx[elements] = col;
                             elements++;
+                            //printf("Hit , col %d\n",col);
                             if (elements == idx_size)
                             { //faster realloc than multMatrix
                                 idx_size *= 2;
@@ -162,12 +166,12 @@ void multMatrix(Matrix *A, Matrix *B, Matrix *C)
     uint32_t end = 0;
 
     c_elem[0] = 0;
-    last = -1; //the first element is set to -1 and is used to avoid adding the same element twice
 
     for (uint32_t row = 1; row <= A->size; row++)
     { //go to each row of mtr A
 
         elements = 0;
+        last = -1; //the first element is set to -1 and is used to avoid adding the same element twice
         c_elem[row] = c_elem[row - 1] + elements;
 
         for (uint32_t col = 1; col <= B->size; col++)
@@ -232,40 +236,42 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
     c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
-    elements = (uint32_t *)malloc((A->size) * sizeof(uint32_t));
+    elements = (uint32_t *)malloc((A->size) * sizeof(uint32_t)); //elements in each row
 
     c_elem[0] = 0;
-    int perc = 0;
 
 #pragma omp parallel
     {
         //allocate memory for local matrices used by each thread
-        uint32_t *temp, indexB, indexA, last, localElements, totalElements, tempSize;
+        uint32_t *temp, indexB, indexA, sizeA, sizeB, last, localElements, totalElements, tempSize, start_a, start_b, end_a, end_b;
         temp = (uint32_t *)malloc(sizeof(uint32_t));
         tempSize = 1;
         last = -1;
-
-        localElements = 0; //elements for each row
+        sizeA = A->size;
+        sizeB = B->size;
         totalElements = 0;
 
         int nthreads = omp_get_num_threads();
         int id = omp_get_thread_num();
 
-        for (uint32_t row = 1 + id; row <= A->size; row += nthreads)
+        for (uint32_t row = 1 + id; row <= sizeA; row += nthreads)
         { //go to each row of mtr A
-
-            localElements = 0;
-
-            for (uint32_t col = 1; col <= B->size; col++)
+            last = -1;
+            localElements = 0; //elements in each row
+            for (uint32_t col = 1; col <= sizeB; col++)
             { //go to each col of mtr Β
+                start_a = A->csc_elem[row - 1];
+                end_a = A->csc_elem[row];
 
-                for (uint32_t a = A->csc_elem[row - 1]; a < A->csc_elem[row]; a++)
+                for (uint32_t a = start_a; a < end_a; a++)
                 { //go to each element in row "row" of mtr A
 
                     indexA = A->csc_idx[a];
+                    start_b = B->csc_elem[indexA - 1];
+                    end_b = B->csc_elem[indexA];
 
-                    for (uint32_t b = B->csc_elem[indexA - 1]; b < B->csc_elem[indexA]; b++)
-                    { //check if there is a match in col "col"of mtr B
+                    for (uint32_t b = start_b; b < end_b; b++)
+                    { //check if there is a match in col "col" of mtr B
                         indexB = B->csc_idx[b];
 
                         if (indexB > col)
@@ -275,20 +281,22 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
                         {
                             if (last == col) //check if the element is already added
                             {
+                                continue;
                                 //do not add it
                             }
 
                             else
-                            { //add it
-
+                            {
                                 temp[totalElements] = col;
                                 totalElements++;
+                                localElements++;
+
                                 if (totalElements == tempSize)
                                 { //realloc if needed
                                     tempSize *= 2;
                                     temp = realloc(temp, tempSize * sizeof(uint32_t));
                                 }
-                                localElements++;
+
                                 last = col;
                             }
                             break;
@@ -304,9 +312,9 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
         if (id == 0)
         {
-            for (uint32_t row = 1; row <= A->size; row++)
+            for (uint32_t row = 1; row <= sizeA; row++)
                 c_elem[row] = c_elem[row - 1] + elements[row]; //c_elem contains the total number of elements up to row[i]
-            c_idx = realloc(c_idx, c_elem[A->size] * sizeof(uint32_t));
+            c_idx = realloc(c_idx, c_elem[sizeA] * sizeof(uint32_t));
         }
 
 #pragma omp barrier //sync
@@ -315,11 +323,10 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
         uint32_t start, end;
 
         //each thread saves the indices in the final array
-        for (uint32_t row = 1 + id; row <= A->size; row += nthreads)
+        for (uint32_t row = 1 + id; row <= sizeA; row += nthreads)
         {
             start = c_elem[row - 1];
             end = c_elem[row];
-
             for (uint32_t j = start; j < end; j++)
                 c_idx[j] = temp[j - start];
         }
@@ -470,7 +477,7 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
             for (int i = row_start; i < row_end; i++)
             {
                 // Find block column offset (blockX)
-                blockX = (blockedMatrix->offsets[currentBlock]-1) % maxBlocks + 1;
+                blockX = (blockedMatrix->offsets[currentBlock] - 1) % maxBlocks + 1;
                 // Save column index taking blockX offset into account
                 mtr->csc_idx[elements] = blockedMatrix->list[currentBlock]->csc_idx[i] + (blockX - 1) * blockSize;
                 elements++;
