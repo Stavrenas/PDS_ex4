@@ -119,7 +119,6 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 
                     else if (indexB == col)
                     {
-
                         if (last == col) //check if the element is already added
                         {
                             //do not add it
@@ -127,10 +126,8 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
 
                         else
                         {
-
                             c_idx[elements] = col;
                             elements++;
-                            //printf("Hit , col %d\n",col);
                             if (elements == idx_size)
                             { //faster realloc than multMatrix
                                 idx_size *= 2;
@@ -319,16 +316,17 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
 #pragma omp barrier //sync
 
-        uint32_t index = 0;
-        uint32_t start, end;
+        uint32_t start, end,index;
+        index = 0;
 
         //each thread saves the indices in the final array
         for (uint32_t row = 1 + id; row <= sizeA; row += nthreads)
         {
             start = c_elem[row - 1];
             end = c_elem[row];
-            for (uint32_t j = start; j < end; j++)
-                c_idx[j] = temp[j - start];
+            for (uint32_t j = start; j < end; j++, index++)
+                c_idx[j] = temp[index];
+            
         }
     }
 
