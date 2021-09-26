@@ -452,7 +452,8 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     mtr->csc_elem[0] = 0;
     int blockSize = blockedMatrix->blockSize;
 
-    uint32_t maxBlocks = floor(mtr->size / blockSize) + 1;
+    uint32_t maxBlocks =floor(blockedMatrix->size / blockSize) + 1;
+
     // Index to iterate over all blocks
     uint32_t currentBlock = 0; // blockedMatrix->row_ptr[0]
 
@@ -500,8 +501,9 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
             }
 
             // Go to next block containing current row
-            printf("%d\n", currentBlock);
+            //printf("Current block is %d (%d)\n",currentBlock,blockedMatrix->offsets[currentBlock]);
             currentBlock++;
+
         }
 
         // Check if current 'block-row' contains next row of mtr
@@ -650,6 +652,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
     uint32_t blockSize = A->list[0]->size;
     uint32_t maxBlocks = floor(A->size / blockSize) + 1;
+    printf("Max Blocks from mult: %d\n",maxBlocks);
 
     size = 1;
     totalBlocks = 0;
@@ -661,6 +664,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
         C->row_ptr[blockY - 1] = totalBlocks;
+
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
             //Create block: Cp,q (p = BlockY, q = BlockX)
