@@ -28,19 +28,31 @@ int main(int argc, char **argv)
     BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char filenameA[] = "12.mtx";
-    char filenameB[] = "12.mtx";
+    char matrix[] = "mycielskian";
+    char *filenameA = (char *)malloc(25 * sizeof(char));
+    char *filenameB = (char *)malloc(25 * sizeof(char));
+    char *name = (char *)malloc(25 * sizeof(char));
+    sprintf(filenameA, "%s.mtx", matrix);
+    sprintf(filenameB, "%s.mtx", matrix);
 
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
 
-    blockMatrix(A, 4, blockA);
-    blockMatrix(B, 4, blockB);
-    printf("Normal matrix\n");
-    printMatrix(A);
-    unblockMatrix(C, 4, blockA);
-    printf("Blocked and unblocked matrix\n");
-    printMatrix(C);
+    multMatrix2(A, B, C);
+    sprintf(name, "%s_serial.txt", matrix);
+    saveMatrix(C, name);
+
+    multMatrixParallel(A, B, C);
+    sprintf(name, "%s_parallel.txt", matrix);
+    saveMatrix(C, name);
+
+    // blockMatrix(A, 4, blockA);
+    // blockMatrix(B, 4, blockB);
+    // printf("Normal matrix\n");
+    // printMatrix(A);
+    // unblockMatrix(C, 4, blockA);
+    // printf("Blocked and unblocked matrix\n");
+    // printMatrix(C);
 
     MPI_Finalize();
 
