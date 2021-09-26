@@ -316,7 +316,7 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
 #pragma omp barrier //sync
 
-        uint32_t start, end,index;
+        uint32_t start, end, index;
         index = 0;
 
         //each thread saves the indices in the final array
@@ -326,7 +326,6 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
             end = c_elem[row];
             for (uint32_t j = start; j < end; j++, index++)
                 c_idx[j] = temp[index];
-            
         }
     }
 
@@ -345,6 +344,12 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     blockedMatrix->list = (Matrix **)malloc(1 * sizeof(Matrix *));
     blockedMatrix->offsets = (uint32_t *)malloc(1 * sizeof(uint32_t)); //maximum size of blocks
     blockedMatrix->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
+
+    if (blockSize > mtr->size / 2)
+    {
+        printf("Invalid blocksize\n");
+        exit(-90);
+    }
 
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
@@ -424,27 +429,30 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     }
 
     blockedMatrix->size = mtr->size;
+    blockedMatrix->blockSize = blockSize;
     blockedMatrix->totalBlocks = totalBlocks;
 
-    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
+    //printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f \n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks));
 
     // printf("Start of each row:\n");
     // for (int i = 0; i < maxBlocks; ++i)
     //     printf("row: %d, block: %d\n", i + 1, blockedMatrix->row_ptr[i]);
 }
 
-void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
+void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 {
     // Function to convert blocked matrix into unblocked csc
 
     mtr->size = blockedMatrix->size;
+
     // Allocate memory for unblocked matrix
     mtr->csc_idx = (uint32_t *)malloc(sizeof(uint32_t));
     mtr->csc_elem = (uint32_t *)malloc((mtr->size + 1) * sizeof(uint32_t));
 
     mtr->csc_elem[0] = 0;
+    int blockSize = blockedMatrix->blockSize;
 
-    uint32_t maxBlocks = ceil(mtr->size / blockSize);
+    uint32_t maxBlocks = floor(mtr->size / blockSize) + 1;
     // Index to iterate over all blocks
     uint32_t currentBlock = 0; // blockedMatrix->row_ptr[0]
 
@@ -459,8 +467,12 @@ void unblockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix
 
     // Block column offset
     int blockX = 0;
-
-    // Construct each row of the unblocked matrix
+    // printf("Row ptr: ");
+    // for (int i = 0; i < maxBlocks; i++)
+    //     printf("%d ", blockedMatrix->row_ptr[i]);
+    // printf("Total incoming blocks: %d\n", blockedMatrix->totalBlocks);
+    // printf("Blocksize: %d, MaxBlocks: %d, size: %d\n", blockSize, maxBlocks, mtr->size);
+    // // Construct each row of the unblocked matrix
     for (int row = 1; row <= mtr->size; row++)
     {
         // Loop through blocks containing current row
@@ -645,13 +657,13 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
-
+    C->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
     for (uint32_t blockY = 1; blockY <= maxBlocks; blockY++)
     {
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
             //Create block: Cp,q (p = BlockY, q = BlockX)
-
+            C->row_ptr[blockY - 1] = totalBlocks;
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
 
@@ -750,5 +762,6 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
         }
     }
     C->size = A->size;
+    C->blockSize = A->blockSize;
     C->totalBlocks = totalBlocks;
 }
