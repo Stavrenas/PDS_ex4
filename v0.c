@@ -79,3 +79,43 @@ int main(int argc, char **argv)
     // clearMatrix(C);
     // clearBlockedMatrix(blockA);
 }
+
+void MPI_Mult(BlockedMatrix* A, BlockedMatrix *B, BlockedMatrix *C)
+{
+    // Given n MPI proccesses
+    // Each proccess must calculate (maxBlocks*maxBlocks)/n blocks
+    // using multMatrixParallel(A, B, C)
+    // and then send data to proccess 0 to merge into final result
+    // Example n = maxBlocks then each proccess p will calculate
+    // blocks C(p,1) to C(p,maxBlocks)
+    // Then send these blocks to proccess 0 using MPI_Send
+
+    // Get number of tasks and rank
+    int rank = 0, num_tasks = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    // Proccess matrix chunk of blocks
+    Matrix *Cp = malloc(sizeof(Matrix));
+
+    // Matrix multiplication should have limits (p1, p2, q1, q2)
+    // Here we say that multBlockedMatrix should calulate only one 'block-row'
+    int p1 = rank + 1;
+    int p2 = rank + 1;
+    int q1 = rank*(A->size) + 1;
+    int q2 = rank*(A->size) + A->maxBlocks;
+
+    multBlockedMatrix(A, B, Cp, p1, p2, q1, q2);
+
+    // All proccesses but 0 send data to 0
+    if(rank != 0)
+    {
+        MPI_Recv();
+        // Merge matrices Cp into C
+    } else
+    {
+        MPI_Send();
+        // maybe some memory deallocation
+        return;
+    }
+}
