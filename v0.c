@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char matrix[] = "50";
+    char matrix[] = "mycielskian";
     char *filenameA = (char *)malloc(25 * sizeof(char));
     char *filenameB = (char *)malloc(25 * sizeof(char));
     char *name = (char *)malloc(25 * sizeof(char));
@@ -49,14 +49,14 @@ int main(int argc, char **argv)
     multMatrixParallel(A, B, C);
     printf("Time for parallel mult: %f\n", toc(start));
 
-    //sprintf(name, "%s_parallel.txt", matrix);
-    //saveMatrix(C, name);
-    printMatrix(C);
+    sprintf(name, "%s_parallel.txt", matrix);
+    saveMatrix(C, name);
+    //printMatrix(C);
 
     printf("\n");
 
     start = tic();
-    int blocksize = 5;
+    int blocksize = 50;
 
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
@@ -65,10 +65,10 @@ int main(int argc, char **argv)
 
     unblockMatrix(blockC, C);
     printf("Time for blocked mult: %f\n", toc(start));
-    printMatrix(C);
+    //printMatrix(C);
 
-    //sprintf(name, "%s_blocked.txt", matrix);
-    // saveMatrix(C, name);
+    sprintf(name, "%s_blocked.txt", matrix);
+    saveMatrix(C, name);
 
     MPI_Finalize();
 
