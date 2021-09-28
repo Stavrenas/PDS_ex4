@@ -36,4 +36,6 @@ int findIndex(BlockedMatrix *mtr, uint32_t indx);
 
 void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
+void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C,  uint32_t *rows, uint32_t rows_size);
+
 #endif //UTILITIES_H
