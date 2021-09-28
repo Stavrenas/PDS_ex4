@@ -315,7 +315,6 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
                     }
                 }
             }
-
             elements[row] = localElements; //this matrix contains the number of elements in each row
         }
 
@@ -324,12 +323,10 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
         c_elem[0] = 0;
         for (uint32_t row = 1; row <= sizeA; row++)
-        {
-            //printf("Accessed elements %ld\n", row * sizeof(uint32_t));
             c_elem[row] = c_elem[row - 1] + elements[row]; //c_elem contains the total number of elements up to row[i]
-        }
+        
         c_idx = malloc(c_elem[sizeA] * sizeof(uint32_t));
-        //printf("Good realloc\n");
+
 
 #pragma omp barrier //sync
 
@@ -345,13 +342,9 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
                 c_idx[j] = temp[index];
         }
     }
-    //printf("After parallel\n");
     C->csc_idx = c_idx;
     C->csc_elem = c_elem;
     C->size = A->size;
-    // if (C->csc_elem[C->size] == 0)
-    //     printMatrix(C);
-    // printf("done\n");
 }
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
@@ -542,21 +535,6 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, idx_size;
     //initialize result mult
-    // if (A->csc_elem[A->size] == 0)
-    // {
-    //     printf("A (%d)\n", A->size);
-    //     printMatrix(A);
-    // }
-    // else
-    //     printf("A-(%d)\n", A->size);
-
-    // if (B->csc_elem[B->size] == 0)
-    // {
-    //     printf("B (%d)\n", B->size);
-    //     printMatrix(B);
-    // }
-    // else
-    //     printf("B-(%d)\n", B->size);
 
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
     c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
@@ -744,7 +722,6 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
             //maxBlocks is the maximum number of mults for Cp,q. Variable s is not used
             for (int s = 1; s <= maxBlocks; s++)
             {
-
                 //if either block does not exist
                 if (indexA == -1 || indexB == -1)
                     break;
@@ -762,14 +739,15 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                 //check if the blocks match
                 uint32_t sA = (offsetA - 1) % maxBlocks;
                 uint32_t sB = floor((offsetB - 1) / maxBlocks);
-                //printf("sA %d, sB %d, offsetA %d, offsetB %d\n",sA, sB, offsetA,offsetB);
 
                 if (sA == sB)
                 {
-                    //printf("Mult %d with %d\n",offsetA,offsetB);
-                    //printf("Before Mult\n");
-                    multMatrixParallel(A->list[indexA], B->list[indexB], result);
-                    //printf("Add\n");
+                    //choose best algorithm for speeeeed
+                    if (blockSize <= 40)
+                        multMatrix2(A->list[indexA], B->list[indexB], result);
+                    else
+                        multMatrixParallel(A->list[indexA], B->list[indexB], result);
+
                     addMatrix(result, block, block);
 
                     //find block Bsq
@@ -812,7 +790,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            //free(result); //result matrix will not be needed in the future, counter to "block" matrix
+            free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
 
