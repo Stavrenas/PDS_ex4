@@ -8,6 +8,7 @@
 #include <omp.h>
 #include "utilities.h"
 #include "mmio.h"
+#include "read.h"
 
 void swap(double *n1, double *n2)
 {
@@ -148,6 +149,11 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C)
     C->csc_idx = c_idx;
     C->csc_elem = c_elem;
     C->size = A->size;
+    // if (C->csc_elem[C->size] == 0)
+    // {
+    //     printMatrix(C);
+    //     exit(1);
+    // }
 }
 
 void multMatrix(Matrix *A, Matrix *B, Matrix *C)
@@ -227,25 +233,22 @@ void multMatrix(Matrix *A, Matrix *B, Matrix *C)
 
 void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 {
-
     //allocate memory for result mult
-    uint32_t *c_elem, *elements, *c_idx;
+    uint32_t *c_elem, *elements, *c_idx, sizeA, sizeB;
 
-    c_idx = (uint32_t *)malloc(sizeof(uint32_t));
-    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
-    elements = (uint32_t *)malloc((A->size) * sizeof(uint32_t)); //elements in each row
-
-    c_elem[0] = 0;
+    sizeA = A->size;
+    sizeB = B->size;
+    c_elem = (uint32_t *)malloc((sizeA + 1) * sizeof(uint32_t));
+    elements = (uint32_t *)malloc((sizeA + 1) * sizeof(uint32_t)); //elements in each row
 
 #pragma omp parallel
     {
         //allocate memory for local matrices used by each thread
-        uint32_t *temp, indexB, indexA, sizeA, sizeB, last, localElements, totalElements, tempSize, start_a, start_b, end_a, end_b;
+        uint32_t *temp, indexB, indexA, last, localElements, totalElements, tempSize, start_a, start_b, end_a, end_b;
         temp = (uint32_t *)malloc(sizeof(uint32_t));
         tempSize = 1;
         last = -1;
-        sizeA = A->size;
-        sizeB = B->size;
+
         totalElements = 0;
 
         int nthreads = omp_get_num_threads();
@@ -290,8 +293,19 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 
                                 if (totalElements == tempSize)
                                 { //realloc if needed
-                                    tempSize *= 2;
-                                    temp = realloc(temp, tempSize * sizeof(uint32_t));
+                                    tempSize++;
+                                    uint32_t *tmp = realloc(temp, tempSize * sizeof(uint32_t));
+
+                                    if (tmp != NULL)
+                                        temp = tmp;
+                                    else
+                                    {
+                                        tmp = malloc(tempSize * sizeof(uint32_t));
+                                        for (int i = 0; i < tempSize - 1; i++)
+                                            tmp[i] = temp[i];
+                                        free(temp);
+                                        temp = tmp;
+                                    }
                                 }
 
                                 last = col;
@@ -306,13 +320,16 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
         }
 
 #pragma omp barrier //sync
+#pragma omp single
 
-        if (id == 0)
+        c_elem[0] = 0;
+        for (uint32_t row = 1; row <= sizeA; row++)
         {
-            for (uint32_t row = 1; row <= sizeA; row++)
-                c_elem[row] = c_elem[row - 1] + elements[row]; //c_elem contains the total number of elements up to row[i]
-            c_idx = realloc(c_idx, c_elem[sizeA] * sizeof(uint32_t));
+            //printf("Accessed elements %ld\n", row * sizeof(uint32_t));
+            c_elem[row] = c_elem[row - 1] + elements[row]; //c_elem contains the total number of elements up to row[i]
         }
+        c_idx = malloc(c_elem[sizeA] * sizeof(uint32_t));
+        //printf("Good realloc\n");
 
 #pragma omp barrier //sync
 
@@ -328,10 +345,13 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
                 c_idx[j] = temp[index];
         }
     }
-
+    //printf("After parallel\n");
     C->csc_idx = c_idx;
     C->csc_elem = c_elem;
     C->size = A->size;
+    // if (C->csc_elem[C->size] == 0)
+    //     printMatrix(C);
+    // printf("done\n");
 }
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
@@ -521,8 +541,23 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, idx_size;
-
     //initialize result mult
+    // if (A->csc_elem[A->size] == 0)
+    // {
+    //     printf("A (%d)\n", A->size);
+    //     printMatrix(A);
+    // }
+    // else
+    //     printf("A-(%d)\n", A->size);
+
+    // if (B->csc_elem[B->size] == 0)
+    // {
+    //     printf("B (%d)\n", B->size);
+    //     printMatrix(B);
+    // }
+    // else
+    //     printf("B-(%d)\n", B->size);
+
     c_idx = (uint32_t *)malloc(sizeof(uint32_t));
     c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
     idx_size = 1; //used in realloc
@@ -533,80 +568,91 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
     uint32_t size, start_a, end_a, start_b, end_b, indexA, indexB;
     size = A->size;
 
-    for (uint32_t row = 1; row <= size; row++)
-    { //go to each row of mtr C
+    if (B->csc_elem[B->size] == 0 && A->csc_elem[A->size] == 0)
+    {
+        for (int i = 0; i <= A->size; i++)
+            c_elem[i] = 0;
+    }
+    else
+    {
 
-        start_a = A->csc_elem[row - 1];
-        end_a = A->csc_elem[row];
+        for (uint32_t row = 1; row <= size; row++)
+        { //go to each row of mtr C
 
-        start_b = B->csc_elem[row - 1];
-        end_b = B->csc_elem[row];
+            start_a = A->csc_elem[row - 1];
+            end_a = A->csc_elem[row];
 
-        for (uint32_t a = start_a, b = start_b;;)
-        { //  merge  current row of A and  B
+            start_b = B->csc_elem[row - 1];
+            end_b = B->csc_elem[row];
 
-            if (a == end_a && b == end_b)
-                break;
-            else
-            {
-                indexA = A->csc_idx[a];
-                indexB = B->csc_idx[b];
+            for (uint32_t a = start_a, b = start_b;;)
+            { //  merge  current row of A and  B
 
-                if (indexA < indexB)
-                {
-                    //check if row has elements
-                    if (a != end_a)
-                    {
-                        c_idx[elements] = indexA;
-                        elements++;
-                        a++;
-                    }
-                    //check if row has elements
-                    else if (b != end_b)
-                    {
-                        c_idx[elements] = indexB;
-                        elements++;
-                        b++;
-                    }
-                }
-
-                else if (indexA > indexB)
-                {
-                    //check if row has elements
-                    if (b != end_b)
-                    {
-                        c_idx[elements] = indexB;
-                        elements++;
-                        b++;
-                    }
-                    //check if row has elements
-                    else if (a != end_a)
-                    {
-                        c_idx[elements] = indexA;
-                        elements++;
-                        a++;
-                    }
-                }
-
+                if (a == end_a && b == end_b)
+                    break;
                 else
-                { //if indexA = indexB
-                    c_idx[elements] = indexB;
-                    elements++;
-                    if (a != end_a)
-                        a++;
-                    if (b != end_b)
-                        b++;
-                }
-
-                if (elements == idx_size)
                 {
-                    idx_size *= 2;
-                    c_idx = realloc(c_idx, idx_size * sizeof(uint32_t));
+                    if (a != end_a)
+                        indexA = A->csc_idx[a];
+                    if (b != end_b)
+                        indexB = B->csc_idx[b];
+
+                    if (indexA < indexB)
+                    {
+                        //check if row has elements
+                        if (a != end_a)
+                        {
+                            c_idx[elements] = indexA;
+                            elements++;
+                            a++;
+                        }
+                        //check if row has elements
+                        else if (b != end_b)
+                        {
+                            c_idx[elements] = indexB;
+                            elements++;
+                            b++;
+                        }
+                    }
+
+                    else if (indexA > indexB)
+                    {
+                        //check if row has elements
+                        if (b != end_b)
+                        {
+                            c_idx[elements] = indexB;
+                            elements++;
+                            b++;
+                        }
+                        //check if row has elements
+                        else if (a != end_a)
+                        {
+                            c_idx[elements] = indexA;
+                            elements++;
+                            a++;
+                        }
+                    }
+
+                    else
+                    { //if indexA = indexB
+                        c_idx[elements] = indexB;
+                        elements++;
+                        if (a != end_a)
+                            a++;
+                        if (b != end_b)
+                            b++;
+                    }
+
+                    if (elements == idx_size)
+                    {
+                        idx_size++;
+                        c_idx = realloc(c_idx, idx_size * sizeof(uint32_t));
+                    }
                 }
             }
-        }
 
-        c_elem[row] = elements;
+            c_elem[row] = elements;
+        }
     }
 
     C->csc_idx = c_idx;
@@ -667,11 +713,12 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
             //Create block: Cp,q (p = BlockY, q = BlockX)
+
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
 
             //initialize block
-            block->size = blockSize; 
+            block->size = blockSize;
             block->csc_elem = (uint32_t *)malloc((blockSize + 1) * sizeof(uint32_t));
             block->csc_idx = (uint32_t *)malloc((0) * sizeof(uint32_t));
 
@@ -719,14 +766,16 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
                 if (sA == sB)
                 {
-                    //printf("Mult %d with %d\n",offsetA,offsetB);                 
-                    multMatrix2(A->list[indexA], B->list[indexB], result);
+                    //printf("Mult %d with %d\n",offsetA,offsetB);
+                    //printf("Before Mult\n");
+                    multMatrixParallel(A->list[indexA], B->list[indexB], result);
+                    //printf("Add\n");
                     addMatrix(result, block, block);
 
                     //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
-                        indexB = findIndex(B, offsetB + maxBlocks*i);
+                        indexB = findIndex(B, offsetB + maxBlocks * i);
                         if (indexB != -1)
                             break;
                     }
@@ -739,7 +788,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
-                        indexB = findIndex(B, offsetB + maxBlocks*i);
+                        indexB = findIndex(B, offsetB + maxBlocks * i);
                         if (indexB != -1)
                             break;
                     }
@@ -763,9 +812,10 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            free(result); //result matrix will not be needed in the future, counter to "block" matrix
+            //free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
+
     C->size = A->size;
     C->blockSize = A->blockSize;
     C->totalBlocks = totalBlocks;
