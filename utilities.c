@@ -498,7 +498,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     // // Construct each row of the unblocked matrix
     for (uint32_t row = 1; row <= mtr->size; row++)
     {
-        printf("currentBlock %d\n", currentBlock);
+        // printf("currentBlock %d\n", currentBlock);
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
         while (currentBlock < blockedMatrix->totalBlocks && blockedMatrix->offsets[currentBlock] >= ((row - 1) / blockSize) * maxBlocks + 1 &&
