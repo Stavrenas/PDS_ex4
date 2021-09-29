@@ -22,13 +22,22 @@ int main(int argc, char **argv)
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     MPI_Get_processor_name(processor_name, &name_len);
 
-    Matrix *A = malloc(sizeof(Matrix));
-    Matrix *B = malloc(sizeof(Matrix));
-    Matrix *C = malloc(sizeof(Matrix));
+    Matrix *A = (Matrix*)malloc(sizeof(Matrix));
+    Matrix *B = (Matrix*)malloc(sizeof(Matrix));
+    Matrix *C = NULL;
+    if (world_rank == 0)
+    {
+        C = (Matrix*)malloc(sizeof(Matrix));
+    }
+
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockB = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
-    BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
-    BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+    BlockedMatrix *blockC = NULL;
+    if (world_rank == 0)
+    {
+        blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));;
+    }
+    // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     char matrix[] = "12";
     char *filenameA = (char *)malloc(25 * sizeof(char));
@@ -74,17 +83,27 @@ int main(int argc, char **argv)
     //saveMatrix(C, name);
     //
     MPI_Mult(blockA, blockB, C);
-    //printMatrix(C);
-    sprintf(name, "%s_blockedMPI.txt", matrix);
-    saveMatrix(C, name);
-    MPI_Finalize();
+    // printf("blockResult = %p\n", blockResult->list);
+    // printMatrix(C);
+    // sprintf(name, "%s_blockedMPI.txt", matrix);
+    // saveMatrix(C, name);
 
-    // free memory
-
+    // // free memory
     // clearMatrix(A);
     // clearMatrix(B);
-    // clearMatrix(C);
+    // if (world_rank == 0)
+    // {
+    //     clearMatrix(C);
+    // }
     // clearBlockedMatrix(blockA);
+    // clearBlockedMatrix(blockB);
+    // if (world_rank == 0)
+    // {
+    //     clearBlockedMatrix(blockC);
+    // }
+    // printf("Done here\n");
+
+    MPI_Finalize();
 }
 
 void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
@@ -93,17 +112,28 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
     // Each proccess will calculate (A->size / n) rows
     // The remaining m rows (if any) are assigned to the first m processes
 
-    // Get number of tasks and rank
+    // Get rank and number of tasks
     int rank = 0, num_tasks = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
 
     // Define result matrix and blocked matrix
-    Matrix *Cp = malloc(sizeof(Matrix));
+    Matrix *Cp = (Matrix*)malloc(sizeof(Matrix));
     BlockedMatrix *Cp_blocked = malloc(sizeof(BlockedMatrix));
 
-    int maxBlocks = maxBlocks = floor(A->size / A->blockSize) + 1;
-    //printf("Max blocks = %d\n", maxBlocks);
+    int maxBlocks = floor(A->size / A->blockSize) + 1;
+    if((A->size) % (A->blockSize) == 0)
+    {
+        maxBlocks--;
+    }
+
+    if(rank == 0)
+    {
+        printf("Size = %d\n", A->size);
+        printf("Block size = %d\n", A->blockSize);
+        printf("Max blocks = %d\n", maxBlocks);
+    }
+
     // Number of rows per proccess
     int size = floor(maxBlocks / num_tasks);
     // Remaining rows
@@ -111,7 +141,7 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
     // Rows' size
     int rows_size = size;
     // Current proccess rows
-    uint32_t *rows = (uint32_t *)malloc(size * sizeof(uint32_t));
+    uint32_t *rows = (uint32_t *)malloc(rows_size * sizeof(uint32_t));
 
     // Assign rows to proccesses
     for (int i = 0; i < size; ++i)
@@ -230,7 +260,8 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
 
             addMatrix(C_recv[i], Cp, Cp);
 
-        // maybe some memory deallocation
         // return;
     }
+    clearMatrix(Cp);
+    clearBlockedMatrix(Cp_blocked);
 }
