@@ -349,6 +349,8 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
 {
     uint32_t maxBlocks = floor(mtr->size / blockSize) + 1;
+    if (mtr->size % blockSize == 0)
+        maxBlocks--;
     uint32_t totalBlocks = 0;
     uint32_t listSize = 1; //also equals to offset size
 
@@ -444,7 +446,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     blockedMatrix->blockSize = blockSize;
     blockedMatrix->totalBlocks = totalBlocks;
 
-    printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f. Blocksize is %d\n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks), blockedMatrix->blockSize);
+    //printf("Max blocks are %d and current blocks: %d. Non zero blocks: %f. Blocksize is %d\n", maxBlocks * maxBlocks, totalBlocks, (float)(totalBlocks) / (maxBlocks * maxBlocks), blockedMatrix->blockSize);
 
     // printf("Start of each row:\n");
     // for (int i = 0; i < maxBlocks; ++i)
@@ -462,9 +464,10 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 
     mtr->csc_elem[0] = 0;
     uint32_t blockSize = blockedMatrix->blockSize;
-    printf("Blocksize is %d and size is %d\n", blockSize, mtr->size);
+    //printf("Blocksize is %d and size is %d\n", blockSize, mtr->size);
     uint32_t maxBlocks = floor(blockedMatrix->size / blockSize) + 1;
-
+    if (blockedMatrix->size % blockSize == 0)
+        maxBlocks--;
     // Index to iterate over all blocks
     uint32_t currentBlock = 0; // blockedMatrix->row_ptr[0]
 
@@ -479,11 +482,11 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 
     //find idx_size
     for (uint32_t i = 0; i < blockedMatrix->totalBlocks; i++)
-    {
-        //printf("i is %d\n",i);
         idx_size += blockedMatrix->list[i]->csc_elem[blockSize];
-    }
+
     mtr->csc_idx = (uint32_t *)malloc(idx_size * sizeof(uint32_t));
+
+    uint32_t added = blockedMatrix->totalBlocks;
 
     // Block column offset
     uint32_t blockX = 0;
@@ -491,15 +494,17 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     // for (int i = 0; i < maxBlocks; i++)
     //     printf("%d ", blockedMatrix->row_ptr[i]);
     // printf("Total incoming blocks: %d\n", blockedMatrix->totalBlocks);
-    // printf("Blocksize: %d, MaxBlocks: %d, size: %d\n", blockSize, maxBlocks, mtr->size);
+    printf("Blocksize: %d, MaxBlocks: %d, size: %d, totalBlocks: %d\n", blockSize, maxBlocks, mtr->size, blockedMatrix->totalBlocks);
     // // Construct each row of the unblocked matrix
     for (uint32_t row = 1; row <= mtr->size; row++)
     {
+        printf("blocks %d\n", currentBlock);
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
-        while (blockedMatrix->offsets[currentBlock] >= ((row - 1) / blockSize) * maxBlocks + 1 &&
+        while (currentBlock < blockedMatrix->totalBlocks && blockedMatrix->offsets[currentBlock] >= ((row - 1) / blockSize) * maxBlocks + 1 &&
                blockedMatrix->offsets[currentBlock] <= ((row - 1) / blockSize) * maxBlocks + maxBlocks)
         {
+            //printf("blocks %d\n",currentBlock);
             // Get column indices of current block's rowls
             row_start = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize];
             row_end = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize + 1];
@@ -517,7 +522,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
                 {
                     idx_size++;
                     mtr->csc_idx = realloc(mtr->csc_idx, idx_size * sizeof(uint32_t));
-                    printf("Realloced %d\n", elements);
+                    //printf("Realloced %d\n", elements);
                     // uint32_t *tmp = realloc(mtr->csc_idx, idx_size * sizeof(uint32_t));
 
                     // if (tmp != NULL)
@@ -534,17 +539,23 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 
             // Go to next block containing current row
             //printf("Current block is %d (%d)\n",currentBlock,blockedMatrix->offsets[currentBlock]);
-            currentBlock++;
+            added--;
+            if (currentBlock + 1 < blockedMatrix->totalBlocks)
+                currentBlock++;
+            else
+                break;
         }
 
         // Check if current 'block-row' contains next row of mtr
         // if so then iterate the same blocks
-        if (row % blockSize != 0)
-            currentBlock = blockedMatrix->row_ptr[row / blockSize];
+        if (added != 0)
+        {
+            if (row % blockSize != 0 && row / blockSize < blockedMatrix->totalBlocks)
+                currentBlock = blockedMatrix->row_ptr[row / blockSize];
 
-        else // Go to the first block of the next 'block-row'
-            currentBlock = blockedMatrix->row_ptr[(row + 1) / blockSize];
-
+            else if ((row + 1) / blockSize < blockedMatrix->totalBlocks) // Go to the first block of the next 'block-row'
+                currentBlock = blockedMatrix->row_ptr[(row + 1) / blockSize];
+        }
         // Save non zero elements of current row
         mtr->csc_elem[row] = elements;
     }
@@ -695,6 +706,8 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 
     blockSize = A->list[0]->size;
     maxBlocks = floor(A->size / blockSize) + 1;
+    if (A->size % blockSize == 0)
+        maxBlocks--;
     size = 1;
     totalBlocks = 0;
 
@@ -818,34 +831,41 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     C->totalBlocks = totalBlocks;
 }
 
-void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C,  uint32_t *rows, uint32_t rows_size)
+void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, uint32_t *rows, uint32_t rows_size)
 {
     uint32_t size, totalBlocks, maxBlocks, blockSize;
 
     blockSize = A->list[0]->size;
     maxBlocks = floor(A->size / blockSize) + 1;
+    if (A->size % blockSize == 0)
+        maxBlocks--;
     size = 1;
     totalBlocks = 0;
-    
+
     //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
     C->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
-    for (int i = 0; i <= (rows_size-1); i++)
+    //printf("Rows size is %d\n", rows_size);
+    for (int row = 0; row < rows_size; row++)
     {
-        uint32_t blockY = rows[i]+1;
+        uint32_t blockY = rows[row] + 1;
         C->row_ptr[blockY - 1] = totalBlocks;
+        //printf("blockY is %d\n", blockY);
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
             //Create block: Cp,q (p = BlockY, q = BlockX)
             Matrix *block = (Matrix *)malloc(sizeof(Matrix));
             Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
+
             //initialize block
             block->size = blockSize;
             block->csc_elem = (uint32_t *)malloc((blockSize + 1) * sizeof(uint32_t));
             block->csc_idx = (uint32_t *)malloc((0) * sizeof(uint32_t));
+
             for (int i = 0; i <= blockSize; i++)
                 block->csc_elem[i] = 0;
+
             //find indexes of Ap1 and B1q
             uint32_t indexA, indexB;
             for (int i = 1; i <= maxBlocks; i++)
@@ -854,61 +874,89 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
                 if (indexA != -1)
                     break; //stop when we find the first nonzero block in row p
             }
+
             for (int i = 1; i <= maxBlocks; i++)
             {
                 indexB = findIndex(B, maxBlocks * (i - 1) + blockX);
                 if (indexB != -1)
                     break; //stop when we find the first nonzero block in column q
             }
+
             //maxBlocks is the maximum number of mults for Cp,q. Variable s is not used
             for (int s = 1; s <= maxBlocks; s++)
             {
+
                 //if either block does not exist
                 if (indexA == -1 || indexB == -1)
                     break;
+
                 uint32_t offsetA = A->offsets[indexA];
                 uint32_t offsetB = B->offsets[indexB];
+
                 //break if blocks are out of the desired row/col
                 if (offsetA > blockY * maxBlocks || offsetB % maxBlocks > blockX)
                     break;
                 //or if we run out of blocks
                 if (indexB > B->totalBlocks || indexA > A->totalBlocks)
                     break;
+
                 //check if the blocks match
                 uint32_t sA = (offsetA - 1) % maxBlocks;
                 uint32_t sB = floor((offsetB - 1) / maxBlocks);
                 //printf("sA %d, sB %d, offsetA %d, offsetB %d\n",sA, sB, offsetA,offsetB);
+
                 if (sA == sB)
                 {
                     //printf("Mult %d with %d\n",offsetA,offsetB);
                     multMatrix2(A->list[indexA], B->list[indexB], result);
                     addMatrix(result, block, block);
+
                     //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
-                        indexB = findIndex(B, offsetB + maxBlocks*i);
-                       if (indexB != -1)
+                        indexB = findIndex(B, offsetB + maxBlocks * i);
+                        if (indexB != -1)
                             break;
                     }
+
                     indexA++; //go to the next block in the same line of A
                 }
+
                 else if (sA > sB)
                 {
                     //find block Bsq
                     for (int i = 1; i <= maxBlocks; i++)
                     {
-                        indexB = findIndex(B, offsetB + maxBlocks*i);
+                        indexB = findIndex(B, offsetB + maxBlocks * i);
                         if (indexB != -1)
                             break;
                     }
                 }
 
-                free(result); //result matrix will not be needed in the future, counter to "block" matrix
+                else if (sA < sB)
+                    indexA++; //go to the next block in the same line of A
             }
-        }
 
-        C->size = A->size;
-        C->blockSize = A->blockSize;
-        C->totalBlocks = totalBlocks;
+            // if the mult results in a nonzero block, add it to the result matrix
+            if (block->csc_elem[blockSize] != 0)
+            {
+                C->list[totalBlocks] = block;
+                C->offsets[totalBlocks] = (blockY - 1) * maxBlocks + blockX;
+                totalBlocks++;
+                //printf("Found offset %d\n",(blockY - 1) * maxBlocks + blockX);
+
+                if (size == totalBlocks)
+                {
+                    size++;
+                    C->list = realloc(C->list, size * sizeof(Matrix *));
+                    C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
+                }
+            }
+            free(result); //result matrix will not be needed in the future, counter to "block" matrix
+        }
     }
+
+    C->size = A->size;
+    C->blockSize = A->blockSize;
+    C->totalBlocks = totalBlocks;
 }
