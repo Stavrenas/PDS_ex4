@@ -495,12 +495,13 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     // // Construct each row of the unblocked matrix
     for (uint32_t row = 1; row <= mtr->size; row++)
     {
+        printf("%d\n", currentBlock);
         // Loop through blocks containing current row
         // check offset to see if a block contains current row
         while (blockedMatrix->offsets[currentBlock] >= ((row - 1) / blockSize) * maxBlocks + 1 &&
                blockedMatrix->offsets[currentBlock] <= ((row - 1) / blockSize) * maxBlocks + maxBlocks)
         {
-            // Get column indices of current block's rowls
+            // Get column indices of current block's rows
             row_start = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize];
             row_end = blockedMatrix->list[currentBlock]->csc_elem[(row - 1) % blockSize + 1];
 
@@ -826,7 +827,7 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
     maxBlocks = floor(A->size / blockSize) + 1;
     size = 1;
     totalBlocks = 0;
-    
+
     //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
