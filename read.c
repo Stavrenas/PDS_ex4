@@ -154,22 +154,31 @@ void printBlockedMatrix(BlockedMatrix *res)
 
 void clearMatrix(Matrix *A)
 {
-    free(A->csc_idx);
-    free(A->csc_elem);
-    free(A);
+    if (A != NULL)
+    {
+        free(A->csc_idx);
+        free(A->csc_elem);
+        free(A);
+    }
 }
 
 void clearBlockedMatrix(BlockedMatrix *blockA)
 {
-    // Deallocate memory occupied by each block
-    for (int i = 0; i < blockA->size; ++i)
-        clearMatrix(blockA->list[i]);
-    
-
-    // Deallocate memory occupied by blocked matrix data
-    free(blockA->list);
-    free(blockA->offsets);
-    free(blockA);
+    if (blockA != NULL)
+    {
+        if (blockA->list != NULL)
+        {
+            // Deallocate memory occupied by each block
+            for (int i = 0; i < blockA->totalBlocks; ++i)
+            {
+                clearMatrix(blockA->list[i]);
+            }
+            // Deallocate memory occupied by blocked matrix data
+            free(blockA->list);
+        }
+        free(blockA->offsets);
+        free(blockA);
+    }
 }
 
 void saveMatrix(Matrix *res, char *filename)
