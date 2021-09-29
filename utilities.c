@@ -540,7 +540,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
             // Go to next block containing current row
             //printf("Current block is %d (%d)\n",currentBlock,blockedMatrix->offsets[currentBlock]);
             added--;
-            if (currentBlock + 1 < blockedMatrix->totalBlocks)
+            if (added!= 0 &&  currentBlock < blockedMatrix->totalBlocks-1)
                 currentBlock++;
             else
                 break;
@@ -550,10 +550,10 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
         // if so then iterate the same blocks
         if (added != 0)
         {
-            if (row % blockSize != 0 && row / blockSize < blockedMatrix->totalBlocks)
+            if (row % blockSize != 0 && (row / blockSize) < blockedMatrix->totalBlocks -1 )
                 currentBlock = blockedMatrix->row_ptr[row / blockSize];
 
-            else if ((row + 1) / blockSize < blockedMatrix->totalBlocks) // Go to the first block of the next 'block-row'
+            else if (((row + 1) / blockSize) < blockedMatrix->totalBlocks - 1) // Go to the first block of the next 'block-row'
                 currentBlock = blockedMatrix->row_ptr[(row + 1) / blockSize];
         }
         // Save non zero elements of current row
