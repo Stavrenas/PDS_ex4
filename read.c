@@ -142,8 +142,8 @@ void printMatrix(Matrix *res)
 
 void printBlockedMatrix(BlockedMatrix *res)
 {
-    for (int i = 0; i < res->totalBlocks
-    ; i++)
+    printf("Totalblocks %d \n", res->totalBlocks);
+    for (int i = 0; i < res->totalBlocks; i++)
     {
         printf("Block %d: \n", i);
         printf("Offset = %d\n", res->offsets[i]);
