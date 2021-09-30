@@ -123,9 +123,8 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
 
     int maxBlocks = floor(A->size / A->blockSize) + 1;
     if((A->size) % (A->blockSize) == 0)
-    {
         maxBlocks--;
-    }
+    
 
     if(rank == 0)
     {
@@ -176,14 +175,15 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
     MPI_Request request[num_tasks - 1];
 
     // All proccesses except 0 send data to 0
+    int tag = 99;
     if (rank != 0)
     {
         // Send csc_idx size to proccess 0
-        MPI_Send(&Cp->csc_elem[Cp->size], 1, MPI_UINT32_T, 0, 99, MPI_COMM_WORLD);
+        MPI_Send(&Cp->csc_elem[Cp->size], 1, MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
         if (Cp->csc_elem[Cp->size] != 0)
         {
-            MPI_Send(Cp->csc_idx, Cp->csc_elem[Cp->size], MPI_UINT32_T, 0, 99, MPI_COMM_WORLD);
-            MPI_Send(Cp->csc_elem, Cp->size, MPI_UINT32_T, 0, 99, MPI_COMM_WORLD);
+            MPI_Send(Cp->csc_idx, Cp->csc_elem[Cp->size], MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
+            MPI_Send(Cp->csc_elem, Cp->size, MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
         }
     }
     else
@@ -206,6 +206,7 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
             MPI_Wait(&request[i - 1], &status);
 
         // Allocate memory for non-empty matrices to be received
+        C_recv = malloc(num_tasks * sizeof(Matrix *));  //better malloc than realloc
         for (int i = 1; i < num_tasks; ++i)
         {
             printf("rank: %d, size: %d\n", rank, idx_size[i]);
@@ -214,7 +215,6 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
             {
                 // Allocate memory for new matrix
                 elements++;
-                C_recv = realloc(C_recv, elements * sizeof(Matrix *));
                 C_recv[elements - 1] = (Matrix *)malloc(1 * sizeof(Matrix));
                 C_recv[elements - 1]->size = A->size;
                 C_recv[elements - 1]->csc_idx = (uint32_t *)malloc(idx_size[i] * sizeof(uint32_t));
@@ -228,7 +228,7 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
         {
             if (idx_size[i] != 0)
             {
-                printf("receiving %d elements\n", idx_size[i]);
+                printf("receiving %d idx_elements\n", idx_size[i]);
                 elements++;
                 MPI_Irecv(C_recv[elements - 1]->csc_idx, idx_size[i], MPI_UINT32_T, i, 99, MPI_COMM_WORLD, &request[i - 1]);
             }
@@ -245,6 +245,7 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
         {
             if (idx_size[i] != 0)
             {
+                printf("receiving %d elem_elements\n", idx_size[i]);
                 elements++;
                 MPI_Irecv(C_recv[elements - 1]->csc_elem, C_recv[elements - 1]->size, MPI_UINT32_T, i, 99, MPI_COMM_WORLD, &request[i - 1]);
             }
@@ -252,12 +253,11 @@ void MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
 
         // Wait to receive all csc_elem data
         for (int i = 1; i < num_tasks; ++i)
-
             MPI_Wait(&request[i - 1], &status);
 
         // Merge matrices by adding them
+        printf("Thread %d: adding\n", rank);
         for (int i = 0; i < elements; ++i)
-
             addMatrix(C_recv[i], Cp, Cp);
 
         // return;
