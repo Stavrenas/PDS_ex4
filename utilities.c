@@ -583,7 +583,7 @@ void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
 
     for (uint32_t mtr_row = 1; mtr_row <= mtr->size; mtr_row++)
     {
-        block_row = (mtr_row - 1) / blockSize;
+        block_row = (mtr_row - 1) / blockSize; //current row of the blocked matrix 
 
         if (block_row + 1 == maxBlocks)
         {
@@ -595,23 +595,22 @@ void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
             block_end = blockedMatrix->row_ptr[block_row + 1];
             block_start = blockedMatrix->row_ptr[block_row];
         }
-        //printf("--block_row %d, block_start %d, block_end %d--\n", block_row, block_start, block_end);
 
         for (uint32_t block_idx = block_start; block_idx < block_end; block_idx++)
         {
             uint32_t upper, lower; //bounds for the corresponding block
-            uint32_t blockX, blockY;
-            //printf("Block_idx %d, ", block_idx);
+            uint32_t blockX; //horizontal block coordinate
+
             uint32_t offset = blockedMatrix->offsets[block_idx];
 
             blockX = (offset - 1) % maxBlocks + 1;
-            row = (mtr_row - 1) % blockSize + 1;
-            //printf("blockX %d,row %d,  offset %d\n", blockX, row, offset);
+            row = (mtr_row - 1) % blockSize + 1; //current row of the block
 
             uint32_t start = blockedMatrix->list[block_idx]->csc_elem[row - 1];
             uint32_t end = blockedMatrix->list[block_idx]->csc_elem[row];
+
             for (int i = start; i < end; i++, elements++)
-                mtr->csc_idx[elements] = blockedMatrix->list[block_idx]->csc_idx[i] + (blockX - 1) * blockSize;
+                mtr->csc_idx[elements] = blockedMatrix->list[block_idx]->csc_idx[i] + (blockX - 1) * blockSize; //compensate for the offset
             mtr->csc_elem[mtr_row] = elements;
         }
     }
