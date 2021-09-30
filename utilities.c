@@ -558,6 +558,65 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     }
 }
 
+void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
+{
+    mtr->size = blockedMatrix->size;
+    mtr->csc_elem = (uint32_t *)calloc((mtr->size + 1), sizeof(uint32_t));
+    //initialize csc_elem
+
+    uint32_t blockSize = blockedMatrix->blockSize;
+    uint32_t maxBlocks = floor(mtr->size / blockSize) + 1;
+    if (mtr->size % blockSize == 0)
+        maxBlocks--;
+
+    uint32_t idx_size = 0;
+    //add total block elements to find idx_size
+    for (int i = 0; i < blockedMatrix->totalBlocks; i++)
+        idx_size += blockedMatrix->list[i]->csc_elem[blockSize];
+
+    mtr->csc_idx = (uint32_t *)malloc(idx_size * sizeof(uint32_t));
+
+    uint32_t row_elements, block_row, block_start, block_end, row;
+    uint32_t elements = 0;
+
+    printf("Elements allocated for unblocking: %d, size is %d \n", idx_size, mtr->size);
+
+    for (uint32_t mtr_row = 1; mtr_row <= mtr->size; mtr_row++)
+    {
+        block_row = (mtr_row - 1) / blockSize;
+
+        if (block_row + 1 == maxBlocks)
+        {
+            block_start = blockedMatrix->row_ptr[block_row];
+            block_end = blockedMatrix->totalBlocks;
+        }
+        else
+        {
+            block_end = blockedMatrix->row_ptr[block_row + 1];
+            block_start = blockedMatrix->row_ptr[block_row];
+        }
+        //printf("--block_row %d, block_start %d, block_end %d--\n", block_row, block_start, block_end);
+
+        for (uint32_t block_idx = block_start; block_idx < block_end; block_idx++)
+        {
+            uint32_t upper, lower; //bounds for the corresponding block
+            uint32_t blockX, blockY;
+            //printf("Block_idx %d, ", block_idx);
+            uint32_t offset = blockedMatrix->offsets[block_idx];
+
+            blockX = (offset - 1) % maxBlocks + 1;
+            row = (mtr_row - 1) % blockSize + 1;
+            //printf("blockX %d,row %d,  offset %d\n", blockX, row, offset);
+
+            uint32_t start = blockedMatrix->list[block_idx]->csc_elem[row - 1];
+            uint32_t end = blockedMatrix->list[block_idx]->csc_elem[row];
+            for (int i = start; i < end; i++, elements++)
+                mtr->csc_idx[elements] = blockedMatrix->list[block_idx]->csc_idx[i] + (blockX - 1) * blockSize;
+            mtr->csc_elem[mtr_row] = elements;
+        }
+    }
+}
+
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
 {
     uint32_t *c_elem, *c_idx, elements, idx_size;
