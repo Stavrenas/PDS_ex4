@@ -22,20 +22,24 @@ void multMatrix2(Matrix *A, Matrix *B, Matrix *C);
 
 void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C);
 
+void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
+
+void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, uint32_t *rows, uint32_t rows_size);
+
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
+
+void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr);
+
+void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr);
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C);
 
-uint32_t binarySeach(uint32_t* list, uint32_t left, uint32_t right,uint32_t index );
+void addΒlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
-void unblockMatrix( BlockedMatrix *blockedMatrix,Matrix *mtr);
+uint32_t binarySeach(uint32_t *list, uint32_t left, uint32_t right, uint32_t index);
 
 int binarySearch(uint32_t *list, uint32_t left, uint32_t right, uint32_t index);
 
 int findIndex(BlockedMatrix *mtr, uint32_t indx);
-
-void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
-
-void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C,  uint32_t *rows, uint32_t rows_size);
 
 #endif //UTILITIES_H

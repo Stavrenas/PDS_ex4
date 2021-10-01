@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "utilities.h"
 #include "controller.h"
 #include "read.h"
@@ -143,6 +144,12 @@ void printMatrix(Matrix *res)
 void printBlockedMatrix(BlockedMatrix *res)
 {
     printf("Totalblocks %d \n", res->totalBlocks);
+    uint32_t maxBlocks = floor(res->size / res->blockSize) + 1;
+    if (res->size % res->blockSize == 0)
+        maxBlocks--;
+    printf("Row ptr: ");
+    for (int i = 0; i < maxBlocks; i++)
+        printf("%d ", res->row_ptr[i]);
     for (int i = 0; i < res->totalBlocks; i++)
     {
         printf("Block %d: \n", i);
