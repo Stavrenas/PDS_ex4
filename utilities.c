@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <math.h> // sqrt
 #include <float.h>
 #include <time.h>
@@ -615,6 +616,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
         }
     }
 
+    //update csc_elem matrix to the corresponding format
     for (int i = 1; i <= mtr->size; i++)
     {
         if (mtr->csc_elem[i] == 0)
@@ -727,6 +729,100 @@ void addMatrix(Matrix *A, Matrix *B, Matrix *C)
     C->csc_idx = c_idx;
     C->csc_elem = c_elem;
     C->size = A->size;
+}
+
+void addΒlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
+{
+
+    uint32_t blockSize = A->blockSize;
+    uint32_t maxBlocks = floor(A->size / blockSize) + 1;
+    if (A->size % blockSize == 0)
+        maxBlocks--;
+    uint32_t Blocks, totalBlocksA, totalBlocksB;
+    totalBlocksA = A->totalBlocks;
+    totalBlocksB = B->totalBlocks;
+    Blocks = totalBlocksA + totalBlocksB;
+
+    //initialize result matrix
+    C->size = A->size;
+    C->blockSize = blockSize;
+    C->list = (Matrix **)malloc(Blocks * sizeof(Matrix *));
+    C->offsets = (uint32_t *)malloc(Blocks * sizeof(uint32_t)); //maximum size of blocks
+    C->row_ptr = (uint32_t *)malloc(maxBlocks * sizeof(uint32_t));
+    uint32_t offsetA, offsetB;
+    bool added = false;
+
+    //merge block lists of A and B matrices
+    for (int i = 0, iA = 0, iB = 0; iA != totalBlocksA && iB != totalBlocksB;)
+    {
+        added = false;
+        offsetA = offsetB = 0;
+        if (iA < totalBlocksA)
+            offsetA = A->offsets[iA];
+        if (iB < totalBlocksB)
+            offsetB = B->offsets[iB];
+        //printf("OffsetA is %d and offsetB is %d\n", offsetA, offsetB);
+        if (offsetA > offsetB)
+        {
+            if (iB != totalBlocksB)
+            {
+                C->list[i] = B->list[iB];
+                C->offsets[i] = offsetB;
+                iB++;
+                added = true;
+            }
+            else if (iA != totalBlocksA)
+            {
+                C->list[i] = A->list[iA];
+                C->offsets[i] = offsetA;
+                iA++;
+                added = true;
+            }
+        }
+
+        else if (offsetA < offsetB)
+        {
+            if (iA != totalBlocksA)
+            {
+                C->list[i] = A->list[iA];
+                C->offsets[i] = offsetA;
+                iA++;
+                added = true;
+            }
+            else if (iB != totalBlocksB)
+            {
+                C->list[i] = B->list[iB];
+                C->offsets[i] = offsetB;
+                iB++;
+                added = true;
+            }
+        }
+
+        else if (offsetA == offsetB)
+        {
+            Matrix *result = (Matrix *)malloc(sizeof(Matrix)); //used for mult
+            addMatrix(A->list[iA], B->list[iB], result);
+
+            C->list[i] = result;
+            C->offsets[i] = offsetA;
+
+            if (iA != totalBlocksA)
+                iA++;
+            if (iB != totalBlocksB)
+                iB++;
+
+            added = true;
+        }
+
+        if (added)
+        {
+            uint32_t row = (C->offsets[i] - 1) / maxBlocks + 1;
+            //printf("row is %d and i is %d\n",row,i);
+            i++;
+            C->row_ptr[row] = i;
+            C->totalBlocks = i;
+        }
+    }
 }
 
 int findIndex(BlockedMatrix *mtr, uint32_t indx)
