@@ -614,6 +614,12 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
             mtr->csc_elem[mtr_row] = elements;
         }
     }
+
+    for (int i = 1; i <= mtr->size; i++)
+    {
+        if (mtr->csc_elem[i] == 0)
+            mtr->csc_elem[i] = mtr->csc_elem[i - 1];
+    }
 }
 
 void addMatrix(Matrix *A, Matrix *B, Matrix *C)
