@@ -492,16 +492,12 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
     //initialize result matrix
     C->list = (Matrix **)malloc(size * sizeof(Matrix *));
     C->offsets = (uint32_t *)malloc(size * sizeof(uint32_t));
-    C->row_ptr = (int *)malloc(maxBlocks * sizeof(int));
-    for (int i = 1; i < maxBlocks; i++)
-        C->row_ptr[i] = -1;
-    C->row_ptr[0] = 0;
+    C->row_ptr = (int *)calloc(maxBlocks , sizeof(int));
 
     //printf("Rows size is %d\n", rows_size);
     for (int row = 0; row < rows_size; row++)
     {
         uint32_t blockY = rows[row] + 1;
-        C->row_ptr[blockY - 1] = totalBlocks;
         //printf("blockY is %d\n", blockY);
         for (uint32_t blockX = 1; blockX <= maxBlocks; blockX++)
         {
@@ -611,9 +607,16 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
             free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
-    for (int i = 1; i < maxBlocks; i++)
+
+    for (int i = 0; i < totalBlocks; i++)
     {
-        if (C->row_ptr[i] == -1)
+        uint32_t row = (C->offsets[i] - 1) / maxBlocks;
+        C->row_ptr[row + 1] = i+1;
+    }
+
+    for (int i = 1; i < totalBlocks; i++)
+    {
+        if (C->row_ptr[i] == 0)
             C->row_ptr[i] = C->row_ptr[i - 1];
     }
 
@@ -755,17 +758,15 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     for (uint32_t mtr_row = 1; mtr_row <= mtr->size; mtr_row++)
     {
         block_row = (mtr_row - 1) / blockSize; //current row of the blocked matrix
+        block_start = blockedMatrix->row_ptr[block_row];
 
         if (block_row + 1 == maxBlocks)
-        {
-            block_start = blockedMatrix->row_ptr[block_row];
             block_end = blockedMatrix->totalBlocks;
-        }
+
         else
-        {
             block_end = blockedMatrix->row_ptr[block_row + 1];
-            block_start = blockedMatrix->row_ptr[block_row];
-        }
+
+        //printf("Start %d end %d block_row %d\n", block_start, block_end, block_row);
 
         for (uint32_t block_idx = block_start; block_idx < block_end; block_idx++)
         {
@@ -783,6 +784,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
             for (int i = start; i < end; i++, elements++)
                 mtr->csc_idx[elements] = blockedMatrix->list[block_idx]->csc_idx[i] + (blockX - 1) * blockSize; //compensate for the offset
             mtr->csc_elem[mtr_row] = elements;
+            //printf("Elements %d row %d\n", elements, mtr_row);
         }
     }
 

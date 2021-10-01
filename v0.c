@@ -9,7 +9,7 @@
 #include "read.h"
 #include "mmio.h"
 
-Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C);
+Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B);
 
 int main(int argc, char **argv)
 {
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 
     // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char matrix[] = "12";
+    char matrix[] = "50";
     char *filenameA = (char *)malloc(25 * sizeof(char));
     char *filenameB = (char *)malloc(25 * sizeof(char));
     char *name = (char *)malloc(25 * sizeof(char));
@@ -46,64 +46,25 @@ int main(int argc, char **argv)
 
     readMatrix(filenameA, A);
     readMatrix(filenameB, B);
-    // struct timeval start = tic();
-    //
-    //multMatrix2(A, B, C);
-    //sprintf(name, "%s_serial.txt", matrix);
-    // // printf("Time for serial mult: %f\n", toc(start));
-    //saveMatrix(C, name);
-    // // printMatrix(C);
-    //
-    // start = tic();
-    // multMatrixParallel(A, B, C);
-    // printf("Time for parallel mult: %f\n", toc(start));
-    //
-    // sprintf(name, "%s_parallel.txt", matrix);
-    // saveMatrix(C, name);
-    // //printMatrix(C);
-    //
-    // printf("\n");
-    //
-    // start = tic();
+
     int blocksize = 4;
-    //
+    
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
-    //
-    //multBlockedMatrix(blockA, blockB, blockC);
-    //printBlockedMatrix(blockC);
-    //
-    //unblockMatrix(blockC, C);
-    // printf("Time for blocked mult: %f\n", toc(start));
-    // //printMatrix(C);
-    //
-    //sprintf(name, "%s_blocked.txt", matrix);
-    //saveMatrix(C, name);
-    //
-    C = MPI_Mult(blockA, blockB, C);
-    // printf("blockResult = %p\n", blockResult->list);
-    // printMatrix(C);
-    // sprintf(name, "%s_blockedMPI.txt", matrix);
-    // saveMatrix(C, name);
 
-    // // free memory
-    // clearMatrix(A);
-    // clearMatrix(B);
-    // if (world_rank == 0)
-    // {
-    //     clearMatrix(C);
-    // }
-    // clearBlockedMatrix(blockA);
-    // clearBlockedMatrix(blockB);
-    if (world_rank == 0)
-        printMatrix(C);
+    C = MPI_Mult(blockA, blockB);
+
+    if (world_rank == 0){
+        sprintf(name, "%s_blockedMPI.txt", matrix);
+        saveMatrix(C,name);
+    }
 
     // printf("Done here\n");
 
     MPI_Finalize();
 }
 
-Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
+Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
 {
     // Given n MPI proccesses
     // Each proccess will calculate (A->size / n) rows
@@ -159,15 +120,12 @@ Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
 
     multBlockedMatrixMPI(A, B, Cp_blocked, rows, rows_size);
     // printf("Mult %d\n", rank);
-    //printBlockedMatrix(Cp_blocked);
+    // printBlockedMatrix(Cp_blocked);
 
     unblockMatrix(Cp_blocked, Cp);
 
     // printf("Original Cp for thread %d is\n", rank);
     // printMatrix(Cp);
-
-    MPI_Status status;
-    MPI_Request request[num_tasks - 1];
 
     // All proccesses except 0 send data to 0
     int tag = 99;
@@ -242,10 +200,7 @@ Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B, Matrix *C)
             addMatrix(C_recv[i], Cp, temp);
             Cp = temp;
         }
-        C = Cp;
-        return C;
-        //printMatrix(C);
-        // return;
+        return Cp;
     }
     //clearMatrix(Cp);
     //clearBlockedMatrix(Cp_blocked);

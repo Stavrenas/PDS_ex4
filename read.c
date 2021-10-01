@@ -150,6 +150,7 @@ void printBlockedMatrix(BlockedMatrix *res)
     printf("Row ptr: ");
     for (int i = 0; i < maxBlocks; i++)
         printf("%d ", res->row_ptr[i]);
+    printf("\n");
     for (int i = 0; i < res->totalBlocks; i++)
     {
         printf("Block %d: \n", i);
