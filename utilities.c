@@ -453,7 +453,7 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix)
     //     printf("row: %d, block: %d\n", i + 1, blockedMatrix->row_ptr[i]);
 }
 
-void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
+void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
 {
     // Function to convert blocked matrix into unblocked csc
 
@@ -558,7 +558,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     }
 }
 
-void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
+void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
 {
     mtr->size = blockedMatrix->size;
     mtr->csc_elem = (uint32_t *)calloc((mtr->size + 1), sizeof(uint32_t));
@@ -583,7 +583,7 @@ void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
 
     for (uint32_t mtr_row = 1; mtr_row <= mtr->size; mtr_row++)
     {
-        block_row = (mtr_row - 1) / blockSize; //current row of the blocked matrix 
+        block_row = (mtr_row - 1) / blockSize; //current row of the blocked matrix
 
         if (block_row + 1 == maxBlocks)
         {
@@ -599,7 +599,7 @@ void unblockMatrix2(BlockedMatrix *blockedMatrix, Matrix *mtr)
         for (uint32_t block_idx = block_start; block_idx < block_end; block_idx++)
         {
             uint32_t upper, lower; //bounds for the corresponding block
-            uint32_t blockX; //horizontal block coordinate
+            uint32_t blockX;       //horizontal block coordinate
 
             uint32_t offset = blockedMatrix->offsets[block_idx];
 
@@ -967,7 +967,12 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
                 if (sA == sB)
                 {
                     //printf("Mult %d with %d\n",offsetA,offsetB);
-                    multMatrix2(A->list[indexA], B->list[indexB], result);
+
+                    if (blockSize <= 40)
+                        multMatrix2(A->list[indexA], B->list[indexB], result);
+                    else
+                        multMatrixParallel(A->list[indexA], B->list[indexB], result);
+
                     addMatrix(result, block, block);
 
                     //find block Bsq
