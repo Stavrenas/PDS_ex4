@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 
     // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char matrix[] = "50";
+    char matrix[] = "1000";
     char matrix2[] = "12";
     char *filenameA = (char *)malloc(25 * sizeof(char));
     char *filenameB = (char *)malloc(25 * sizeof(char));
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     // saveMatrix(C, name);
 
     multBlockedMatrix(blockA, blockA, blockC);
-    printBlockedMatrix(blockC);
+    //printBlockedMatrix(blockC);
     unblockMatrix(blockC, C);
     sprintf(name, "%s_normal.txt", matrix);
     saveMatrix(C, name);

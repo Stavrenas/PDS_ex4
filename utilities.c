@@ -304,7 +304,7 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C)
                                         tmp = malloc(tempSize * sizeof(uint32_t));
                                         for (int i = 0; i < tempSize - 1; i++)
                                             tmp[i] = temp[i];
-                                        free(temp);
+                                        //free(temp);
                                         temp = tmp;
                                     }
                                 }
@@ -469,7 +469,7 @@ void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            free(result); //result matrix will not be needed in the future, counter to "block" matrix
+            //free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
 
@@ -604,7 +604,7 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, 
                     C->offsets = realloc(C->offsets, size * sizeof(uint32_t *));
                 }
             }
-            free(result); //result matrix will not be needed in the future, counter to "block" matrix
+            //free(result); //result matrix will not be needed in the future, counter to "block" matrix
         }
     }
 

@@ -9,7 +9,7 @@
 #include "read.h"
 #include "mmio.h"
 
-Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B);
+Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B);
 
 int main(int argc, char **argv)
 {
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 
     // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char matrix[] = "50";
+    char matrix[] = "1000";
     char *filenameA = (char *)malloc(25 * sizeof(char));
     char *filenameB = (char *)malloc(25 * sizeof(char));
     char *name = (char *)malloc(25 * sizeof(char));
@@ -48,15 +48,16 @@ int main(int argc, char **argv)
     readMatrix(filenameB, B);
 
     int blocksize = 4;
-    
+
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
 
     C = MPI_Mult(blockA, blockB);
 
-    if (world_rank == 0){
-        sprintf(name, "%s_blockedMPI.txt", matrix);
-        saveMatrix(C,name);
+    if (world_rank == 0)
+    {
+        sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
+        saveMatrix(C, name);
     }
 
     // printf("Done here\n");
@@ -64,14 +65,14 @@ int main(int argc, char **argv)
     MPI_Finalize();
 }
 
-Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
+Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
 {
     // Given n MPI proccesses
     // Each proccess will calculate (A->size / n) rows
     // The remaining m rows (if any) are assigned to the first m processes
 
     // Get rank and number of tasks
-    int rank = 0, num_tasks = 0;
+    int rank , num_tasks;
     MPI_Status mpistat;
     MPI_Request mpireq; //initialize MPI environment
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -115,7 +116,6 @@ Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
     // printf("Thread %d: ", rank);
     // for (int i = 0; i < rows_size; ++i)
     //     printf("%d ", rows[i]);
-
     // printf("\n");
 
     multBlockedMatrixMPI(A, B, Cp_blocked, rows, rows_size);
@@ -202,6 +202,4 @@ Matrix* MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
         }
         return Cp;
     }
-    //clearMatrix(Cp);
-    //clearBlockedMatrix(Cp_blocked);
 }
