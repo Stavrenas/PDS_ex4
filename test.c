@@ -20,12 +20,12 @@ int main(int argc, char **argv)
 
     // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
-    char matrix[] = "1000";
+    char matrix[] = "mycielskian";
     char matrix2[] = "12";
-    char *filenameA = (char *)malloc(25 * sizeof(char));
-    char *filenameB = (char *)malloc(25 * sizeof(char));
-    char *name = (char *)malloc(25 * sizeof(char));
-    int blocksize = 4;
+    char *filenameA = (char *)malloc(40 * sizeof(char));
+    char *filenameB = (char *)malloc(40 * sizeof(char));
+    char *name = (char *)malloc(40 * sizeof(char));
+    int blocksize = 250;
     sprintf(filenameA, "%s.mtx", matrix);
     sprintf(filenameB, "%s.mtx", matrix);
 

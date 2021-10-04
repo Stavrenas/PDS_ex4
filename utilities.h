@@ -24,7 +24,9 @@ void multMatrixParallel(Matrix *A, Matrix *B, Matrix *C);
 
 void multBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
-void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, uint32_t *rows, uint32_t rows_size);
+void multBlockedMatrixMPI2(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C, uint32_t *rows, uint32_t rows_size);
+
+void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
 void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
