@@ -44,6 +44,6 @@ int main(int argc, char **argv)
     multMatrixParallel(A, B, C);
 
     printf("Parallel mult time : %f\n", toc(start));
-    sprintf(name, "%s_serial.txt", matrix);
+    sprintf(name, "%s_parallel.txt", matrix);
     saveMatrix(C, name);
 }
