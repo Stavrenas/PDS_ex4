@@ -3,7 +3,6 @@
 #include <string.h>
 #include <math.h>
 #include "utilities.h"
-#include "controller.h"
 #include "read.h"
 #include "mmio.h"
 

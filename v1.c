@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h> 
+#include <math.h>
 #include <string.h>
 #include "utilities.h"
+
 #include "read.h"
 #include "mmio.h"
 
@@ -22,7 +23,7 @@ int main(int argc, char **argv)
         sprintf(matrix, "%s", argv[1]);
     else
     {
-        printf("Usage: ./v0 matrix_name \n");
+        printf("Usage: ./v1 matrix_name \n");
         exit(-1);
     }
 
@@ -40,9 +41,9 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
-    multMatrix(A, B, C);
-    printf("Serial mult time : %f\n", toc(start));
+    multMatrixParallel(A, B, C);
 
+    printf("Parallel mult time : %f\n", toc(start));
     sprintf(name, "%s_serial.txt", matrix);
     saveMatrix(C, name);
 }
