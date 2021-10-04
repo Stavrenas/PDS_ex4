@@ -34,19 +34,23 @@ int main(int argc, char **argv)
 
     // blockMatrix(C, blocksize, blockC);
     // printBlockedMatrix(blockC);
-
+    struct timeval start = tic();
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
-
+    printf("Block time : %f\n", toc(start));
     // addΒlockedMatrix(blockA, blockB, blockC);
     // printBlockedMatrix(blockC);
     // unblockMatrix(blockC, C);
     // sprintf(name, "%s_block.txt", matrix);
     // saveMatrix(C, name);
-
+    start = tic();
     multBlockedMatrix(blockA, blockA, blockC);
+    printf("Mult time : %f\n", toc(start));
+    start = tic();
     //printBlockedMatrix(blockC);
     unblockMatrix(blockC, C);
+    printf("Unblock time : %f\n", toc(start));
+
     sprintf(name, "%s_normal.txt", matrix);
     saveMatrix(C, name);
 }
