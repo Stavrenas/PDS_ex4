@@ -36,7 +36,7 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     C->row_ptr = (int *)calloc(maxBlocks, sizeof(int));
 
     //printf("Rows size is %d\n", rows_size);
-    for (uint32_t blockY = 1+rank; blockY <= maxBlocks; blockY+=num_tasks)
+    for (uint32_t blockY = 1 + rank; blockY <= maxBlocks; blockY += num_tasks)
     {
         C->row_ptr[blockY - 1] = totalBlocks;
 
@@ -165,4 +165,82 @@ void multBlockedMatrixMPI(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
     C->size = A->size;
     C->blockSize = A->blockSize;
     C->totalBlocks = totalBlocks;
+}
+
+Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
+{
+    int rank, num_tasks;
+    MPI_Status mpistat;
+    MPI_Request mpireq; //initialize MPI environment
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    // Define result matrix and blocked matrix
+    Matrix *Cp = (Matrix *)malloc(sizeof(Matrix));
+    BlockedMatrix *Cp_blocked = malloc(sizeof(BlockedMatrix));
+
+    int maxBlocks = floor(A->size / A->blockSize) + 1;
+    if ((A->size) % (A->blockSize) == 0)
+        maxBlocks--;
+
+    struct timeval start = tic();
+    multBlockedMatrixMPI(A, B, Cp_blocked);
+    printf("MultBlocked time(%d) : %f\n", rank, toc(start));
+    start = tic();
+
+    unblockMatrix(Cp_blocked, Cp);
+    printf("Unblock time(%d) : %f\n", rank, toc(start));
+
+    // All proccesses except 0 send data to 0
+    int tag = 99;
+    if (rank != 0)
+    {
+        // Send csc_idx size to proccess 0
+        MPI_Send(&Cp->csc_elem[Cp->size], 1, MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
+        MPI_Send(Cp->csc_idx, Cp->csc_elem[Cp->size], MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
+        MPI_Send(Cp->csc_elem, Cp->size + 1, MPI_UINT32_T, 0, tag, MPI_COMM_WORLD);
+    }
+    else
+    {
+        Matrix **C_recv = (Matrix **)malloc(num_tasks * sizeof(Matrix *));
+        uint32_t *idx_size = (uint32_t *)malloc(num_tasks * sizeof(uint32_t));
+        idx_size[0] = Cp->csc_elem[Cp->size];
+
+        // Receive size of each matrix
+        for (int i = 1; i < num_tasks; ++i)
+            MPI_Recv(&idx_size[i], 1, MPI_UINT32_T, i, tag, MPI_COMM_WORLD, &mpistat);
+
+        uint32_t elements = 0;
+        for (int i = 1; i < num_tasks; i++)
+        {
+            // Check if matrix contains non-zero blocks
+            // Allocate memory for new matrix
+
+            C_recv[i - 1] = (Matrix *)malloc(sizeof(Matrix));
+            C_recv[i - 1]->size = A->size;
+            C_recv[i - 1]->csc_idx = (uint32_t *)malloc(idx_size[i] * sizeof(uint32_t));
+            C_recv[i - 1]->csc_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+        }
+
+        // Start receiving csc_elem data asychronously
+
+        for (int i = 1; i < num_tasks; ++i)
+            MPI_Recv(C_recv[i - 1]->csc_idx, idx_size[i], MPI_UINT32_T, i, tag, MPI_COMM_WORLD, &mpistat);
+
+        // Start receiving csc_idx data asychronously
+        for (int i = 1; i < num_tasks; i++)
+            MPI_Recv(C_recv[i - 1]->csc_elem, C_recv[i - 1]->size + 1, MPI_UINT32_T, i, tag, MPI_COMM_WORLD, &mpistat);
+
+        // Merge matrices by adding them
+        start = tic();
+        Matrix *temp = (Matrix *)malloc(sizeof(Matrix));
+        for (int i = 0; i < num_tasks - 1; i++)
+        {
+            addMatrix(C_recv[i], Cp, temp);
+            Cp = temp;
+        }
+        printf("Add time(%d) : %f\n", rank, toc(start));
+        return Cp;
+    }
+    return Cp;
 }

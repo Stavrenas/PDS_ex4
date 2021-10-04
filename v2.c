@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h> 
+#include <math.h>
 #include <string.h>
 #include "utilities.h"
+#include "omp_utilities.h"
 #include "read.h"
 #include "mmio.h"
 
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
     readMatrix(filenameB, B);
 
     struct timeval start = tic();
+    struct timeval total = tic();
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
     printf("Block time : %f\n", toc(start));
@@ -58,7 +60,7 @@ int main(int argc, char **argv)
 
     unblockMatrix(blockC, C);
     printf("Unblock time : %f\n", toc(start));
-
+    printf("Total time : %f\n", toc(total));
     sprintf(name, "%s_blocked.txt", matrix);
     saveMatrix(C, name);
 }

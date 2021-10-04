@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "utilities.h"
-
+#include "omp_utilities.h"
 #include "read.h"
 #include "mmio.h"
 
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("\n\n***Multipling %s ***\n\n", matrix);
+    printf("\n\n***Multipling %s***\n\n", matrix);
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
     char *filenameB = (char *)malloc(40 * sizeof(char));
