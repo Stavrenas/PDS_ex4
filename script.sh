@@ -28,7 +28,7 @@ echo "" >> times.csv
 # v2
 echo "matrix;1" >> times.csv;
 for m in "${!mtx[@]}"; do
-    echo -n "$m;" >> times.csv;
+    echo -n ""${mtx[m]}";" >> times.csv;
     ./v2 ${mtx[m]} ${blockSizes[m]} >> times.csv;
 done
 
