@@ -673,7 +673,7 @@ void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr)
     }
 }
 
-void addΒlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
+void addBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C)
 {
 
     uint32_t blockSize = A->blockSize;

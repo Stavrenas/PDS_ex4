@@ -28,7 +28,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("\n\n***Multipling %s***\n\n", matrix);
+    // printf("\n\n***Multipling %s***\n\n", matrix);
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
     char *filenameB = (char *)malloc(40 * sizeof(char));
@@ -43,9 +43,12 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     multMatrixParallel(A, B, C);
-    mask = C;
-    //multMatrixParallelMasked(A, B, C, mask);
-    printf("Parallel mult time : %f\n", toc(start));
     sprintf(name, "%s_parallel.txt", matrix);
+    saveMatrix(C, name);
+    
+    mask = C;
+    multMatrixParallelMasked(A, B, C, mask);
+    printf("Parallel mult time : %f\n", toc(start));
+    sprintf(name, "%s_parallelMasked.txt", matrix);
     saveMatrix(C, name);
 }

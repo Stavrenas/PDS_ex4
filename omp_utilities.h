@@ -14,6 +14,6 @@ void blockMatrix(Matrix *mtr, uint32_t blockSize, BlockedMatrix *blockedMatrix);
 
 void unblockMatrix(BlockedMatrix *blockedMatrix, Matrix *mtr);
 
-void addΒlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
+void addBlockedMatrix(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *C);
 
 #endif //UTILITIES_H
