@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h> 
+#include <math.h>
 #include <string.h>
 #include "utilities.h"
 #include "read.h"
@@ -40,7 +40,8 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
-    multMatrix(A, B, C);
+    //multMatrix(A, B, C);
+    multMatrixMasked(A, B, C, A);
     printf("Serial mult time : %f\n", toc(start));
 
     sprintf(name, "%s_serial.txt", matrix);

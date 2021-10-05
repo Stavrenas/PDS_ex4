@@ -17,6 +17,8 @@ int main(int argc, char **argv)
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockB = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+    BlockedMatrix *temp = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+    BlockedMatrix *blockMask = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     char *matrix = (char *)malloc(40 * sizeof(char));
     int blocksize = 1;
@@ -54,13 +56,16 @@ int main(int argc, char **argv)
     printf("Block time : %f\n", toc(start));
 
     start = tic();
-    multBlockedMatrix(blockA, blockA, blockC);
+    multBlockedMatrix(blockA, blockA, temp);
+    blockMask = temp;
+
+    multBlockedMatrixMasked(blockA, blockA, blockC, blockB);
     printf("Mult time : %f\n", toc(start));
     start = tic();
 
     unblockMatrix(blockC, C);
     printf("Unblock time : %f\n", toc(start));
     printf("Total time : %f\n", toc(total));
-    sprintf(name, "%s_blocked.txt", matrix);
+    sprintf(name, "%s_blockedMasked.txt", matrix);
     saveMatrix(C, name);
 }
