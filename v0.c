@@ -12,6 +12,7 @@ int main(int argc, char **argv)
     Matrix *A = (Matrix *)malloc(sizeof(Matrix));
     Matrix *B = (Matrix *)malloc(sizeof(Matrix));
     Matrix *C = (Matrix *)malloc(sizeof(Matrix));
+    Matrix *mask = (Matrix *)malloc(sizeof(Matrix));
 
     char *matrix = (char *)malloc(40 * sizeof(char));
 
@@ -41,9 +42,13 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     multMatrix(A, B, C);
-    // printf("Serial mult time : %f\n", toc(start));
-    printf("%lf\n", toc(start));
+    sprintf(name, "%s_serialMasked.txt", matrix);
+    saveMatrix(C, name);
+    
+    mask = C;
+    multMatrixMasked(A, B, C, mask);
+    printf("Serial mult time : %f\n", toc(start));
 
-    sprintf(name, "%s_serial.txt", matrix);
+    sprintf(name, "%s_serialMasked.txt", matrix);
     saveMatrix(C, name);
 }

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <math.h>
+#include <math.h> 
 #include <float.h>
 #include <time.h>
 #include <sys/time.h>
@@ -50,6 +50,85 @@ void multMatrix(Matrix *A, Matrix *B, Matrix *C)
 
         for (uint32_t col = 1; col <= B->size; col++)
         { //go to each col of mtr Β
+
+            for (uint32_t a = A->csc_elem[row - 1]; a < A->csc_elem[row]; a++)
+            { //go to each element in "row"-th row  of mtr A
+
+                uint32_t indexA = A->csc_idx[a];
+
+                for (uint32_t b = B->csc_elem[indexA - 1]; b < B->csc_elem[indexA]; b++)
+                { //check if there is a match in col "col" of mtr B
+                    indexB = B->csc_idx[b];
+
+                    if (indexB > col)
+                        break;
+
+                    else if (indexB == col)
+                    {
+                        if (last == col) //check if the element is already added
+                        {
+                            continue;
+                            //do not add it
+                        }
+
+                        else
+                        {
+                            temp[elements] = col;
+                            last = col;
+                            elements++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        c_elem[row] = c_elem[row - 1] + elements;
+
+        if (elements != 0)
+        { //add the indexes and realloc
+
+            idx_size += elements * sizeof(uint32_t); //in bytes
+            c_idx = realloc(c_idx, idx_size);
+            end += elements;
+
+            for (uint32_t i = end - elements; i < end; i++)
+                c_idx[i] = temp[i - end + elements];
+        }
+    }
+
+    C->csc_idx = c_idx;
+    C->csc_elem = c_elem;
+    C->size = A->size;
+}
+
+void multMatrixMasked(Matrix *A, Matrix *B, Matrix *C, Matrix *mask)
+{
+    //alocate memory for result matrix
+    uint32_t *c_elem, *c_idx, elements, *temp, indexB, last;
+
+    c_idx = (uint32_t *)malloc(sizeof(uint32_t));
+    c_elem = (uint32_t *)malloc((A->size + 1) * sizeof(uint32_t));
+    temp = (uint32_t *)malloc((A->size) * sizeof(uint32_t));
+
+    uint32_t idx_size = 0;
+    uint32_t end = 0;
+
+    c_elem[0] = 0;
+
+    for (uint32_t row = 1; row <= A->size; row++)
+    { //go to each row of mtr A
+
+        elements = 0;
+        last = -1; //the first element is set to -1 and is used to avoid adding the same element twice
+        c_elem[row] = c_elem[row - 1] + elements;
+
+        uint32_t maskStart=mask->csc_elem[row-1];
+        uint32_t maskEnd =mask->csc_elem[row];
+
+        for (uint32_t index = maskStart; index < maskEnd; index++)
+        { //go to each col of mtr Mask
+            uint32_t col = mask->csc_idx[index];
 
             for (uint32_t a = A->csc_elem[row - 1]; a < A->csc_elem[row]; a++)
             { //go to each element in "row"-th row  of mtr A

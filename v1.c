@@ -13,6 +13,7 @@ int main(int argc, char **argv)
     Matrix *A = (Matrix *)malloc(sizeof(Matrix));
     Matrix *B = (Matrix *)malloc(sizeof(Matrix));
     Matrix *C = (Matrix *)malloc(sizeof(Matrix));
+    Matrix *mask = (Matrix *)malloc(sizeof(Matrix));
 
     char *matrix = (char *)malloc(40 * sizeof(char));
 
@@ -42,9 +43,12 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     multMatrixParallel(A, B, C);
-
-    // printf("Parallel mult time : %f\n", toc(start));
-    printf("%lf\n",toc(start));
     sprintf(name, "%s_parallel.txt", matrix);
+    saveMatrix(C, name);
+    
+    mask = C;
+    multMatrixParallelMasked(A, B, C, mask);
+    printf("Parallel mult time : %f\n", toc(start));
+    sprintf(name, "%s_parallelMasked.txt", matrix);
     saveMatrix(C, name);
 }
