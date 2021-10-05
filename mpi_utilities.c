@@ -185,11 +185,11 @@ Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
 
     struct timeval start = tic();
     multBlockedMatrixMPI(A, B, Cp_blocked);
-    printf("MultBlocked time(%d) : %f\n", rank, toc(start));
+    // printf("MultBlocked time(%d) : %f\n", rank, toc(start));
     start = tic();
 
     unblockMatrix(Cp_blocked, Cp);
-    printf("Unblock time(%d) : %f\n", rank, toc(start));
+    // printf("Unblock time(%d) : %f\n", rank, toc(start));
 
     // All proccesses except 0 send data to 0
     int tag = 99;
@@ -239,7 +239,7 @@ Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
             addMatrix(C_recv[i], Cp, temp);
             Cp = temp;
         }
-        printf("Add time(%d) : %f\n", rank, toc(start));
+        // printf("Add time(%d) : %f\n", rank, toc(start));
         return Cp;
     }
     return Cp;
