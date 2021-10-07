@@ -324,11 +324,11 @@ Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
 
     struct timeval start = tic();
     multBlockedMatrixMPI(A, B, Cp_blocked);
-    printf("MultBlocked time(%d) : %f\n", rank, toc(start));
-    start = tic();
+    //printf("MultBlocked time(%d) : %f\n", rank, toc(start));
+    //start = tic();
 
     unblockMatrix(Cp_blocked, Cp);
-    printf("Unblock time(%d) : %f\n", rank, toc(start));
+    //printf("Unblock time(%d) : %f\n", rank, toc(start));
 
     // All proccesses except 0 send data to 0
     int tag = 99;
@@ -371,14 +371,14 @@ Matrix *MPI_Mult(BlockedMatrix *A, BlockedMatrix *B)
             MPI_Recv(C_recv[i - 1]->csc_elem, C_recv[i - 1]->size + 1, MPI_UINT32_T, i, tag, MPI_COMM_WORLD, &mpistat);
 
         // Merge matrices by adding them
-        start = tic();
+        //start = tic();
         Matrix *temp = (Matrix *)malloc(sizeof(Matrix));
         for (int i = 0; i < num_tasks - 1; i++)
         {
             addMatrix(C_recv[i], Cp, temp);
             Cp = temp;
         }
-        printf("Add time : %f\n", toc(start));
+        //printf("Add time : %f\n", toc(start));
         return Cp;
     }
     return Cp;
@@ -402,11 +402,11 @@ Matrix *MPI_MultMasked(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *mask)
 
     struct timeval start = tic();
     multBlockedMatrixMPIMasked(A, B, Cp_blocked, mask);
-    printf("MultBlocked time(%d) : %f\n", rank, toc(start));
-    start = tic();
+    //printf("MultBlocked time(%d) : %f\n", rank, toc(start));
+    //start = tic();
 
     unblockMatrix(Cp_blocked, Cp);
-    printf("Unblock time(%d) : %f\n", rank, toc(start));
+    //printf("Unblock time(%d) : %f\n", rank, toc(start));
 
     // All proccesses except 0 send data to 0
     int tag = 99;
@@ -449,14 +449,14 @@ Matrix *MPI_MultMasked(BlockedMatrix *A, BlockedMatrix *B, BlockedMatrix *mask)
             MPI_Recv(C_recv[i - 1]->csc_elem, C_recv[i - 1]->size + 1, MPI_UINT32_T, i, tag, MPI_COMM_WORLD, &mpistat);
 
         // Merge matrices by adding them
-        start = tic();
+        //start = tic();
         Matrix *temp = (Matrix *)malloc(sizeof(Matrix));
         for (int i = 0; i < num_tasks - 1; i++)
         {
             addMatrix(C_recv[i], Cp, temp);
             Cp = temp;
         }
-        printf("Add time : %f\n", toc(start));
+        //printf("Add time : %f\n", toc(start));
         return Cp;
     }
     return Cp;
