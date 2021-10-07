@@ -74,8 +74,8 @@ int main(int argc, char **argv)
     {
         sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
         saveMatrix(C, name);
-        //printMatrix(C);
         printf("Total time : %f\n", toc(start));
+
     }
 
     MPI_Barrier(MPI_COMM_WORLD); //sync MPI threads

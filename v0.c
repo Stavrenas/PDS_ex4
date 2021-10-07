@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     struct timeval start = tic();
 
     multMatrix(A, B, C);
-    sprintf(name, "%s_serialMasked.txt", matrix);
+    sprintf(name, "%s_serial.txt", matrix);
     saveMatrix(C, name);
     
     mask = C;

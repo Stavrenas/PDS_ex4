@@ -57,8 +57,9 @@ int main(int argc, char **argv)
 
     start = tic();
     multBlockedMatrix(blockA, blockA, temp);
-    sprintf(name, "%s_blockedMasked.txt", matrix);
-    saveMatrix(temp, name);
+    unblockMatrix(temp,C);
+    sprintf(name, "%s_blocked.txt", matrix);
+    saveMatrix(C, name);
     blockMask = temp;
 
     multBlockedMatrixMasked(blockA, blockA, blockC, blockMask);
