@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     BlockedMatrix *blockA = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     BlockedMatrix *blockB = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
-    BlockedMatrix *blockC = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
+    BlockedMatrix *mask = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
 
     // BlockedMatrix *blockResult = (BlockedMatrix *)malloc(sizeof(BlockedMatrix));
     char *matrix = (char *)malloc(40 * sizeof(char));
@@ -46,8 +46,6 @@ int main(int argc, char **argv)
     {
         if (argc != 1 && argc != 3)
             printf("Usage: ./v3 matrix_name blocksize %d\n", argc);
-        // else
-            // printf("\n\n***Multipling %s with a blocksize of %d***\n\n", matrix, blocksize);
     }
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
@@ -61,35 +59,23 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
+    //temp, only for sustoixia
+    blocksize = A->size / world_size;
+    //temp, only for sustoixia
+
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
 
-    //if (world_rank == 0)
-    //printf("Blocking time : %f\n", toc(start));
-
-    start = tic();
-    // C = MPI_Mult(blockA, blockB);
-
-    // if (world_rank == 0)
-    // {
-        // sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
-        // saveMatrix(C, name);
-        // printf("Total time : %f\n", toc(start));
-
-    // }
-
     MPI_Barrier(MPI_COMM_WORLD); //sync MPI threads
 
-    start = tic();
-    // blockMatrix(C, blocksize, blockC);
-    C = MPI_MultMasked(blockA, blockB, blockA);
+    mask = blockA;
+    C = MPI_MultMasked(blockA, blockB, mask);
 
     if (world_rank == 0)
     {
-        sprintf(name, "%s_blockedMPI_%dMasked.txt", matrix, world_size);
+        sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
         saveMatrix(C, name);
-        // printf("Total time masked: %f\n", toc(start));
-        printf("%lf", toc(start));
+        printf("MPI mult time: %f\n", toc(start));
     }
 
     MPI_Finalize();
