@@ -1,8 +1,7 @@
 CC=gcc
 MPICC=mpicc
-CFLAGS=-O3 -lm -g
+CFLAGS=-O3 -lm
 MP=-fopenmp
-N=2
 
 default: all
 
@@ -15,12 +14,7 @@ v1: v1.c utilities.c omp_utilities.c read.c mmio.c
 v2: v2.c utilities.c omp_utilities.c read.c mmio.c
 	$(CC) $(CFLAGS) $(MP) -o $@ $^
 v3: v3.c utilities.c omp_utilities.c mpi_utilities.c read.c mmio.c
-	$(MPICC) $(CFLAGS) $(MP) -o $@ $^
-
-test: test.c utilities.c omp_utilities.c read.c mmio.c
-	$(MPICC) $(CFLAGS) $(MP) -o $@ $^
-run:
-	mpirun -np $(N) ./v3
+	$(MPICC) $(CFLAGS) $(MP) -lrt -o $@ $^ 
 
 clean:
-	rm -f v0 v1 v2 v3 test *.txt
+	rm -f v0 v1 v2 v3 *.txt
