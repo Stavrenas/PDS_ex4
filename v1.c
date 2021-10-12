@@ -42,13 +42,14 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
-    multMatrixParallel(A, B, C);
-    sprintf(name, "%s_parallel.txt", matrix);
-    saveMatrix(C, name);
-    
-    mask = C;
+    // multMatrixParallel(A, B, C);
+    // sprintf(name, "%s_parallel.txt", matrix);
+    // saveMatrix(C, name);
+
+    mask = A;
     multMatrixParallelMasked(A, B, C, mask);
-    printf("Parallel mult time : %f\n", toc(start));
+    // printf("Parallel mult time : %f\n", toc(start));
+    printf("%lf", toc(start));
     sprintf(name, "%s_parallelMasked.txt", matrix);
     saveMatrix(C, name);
 }

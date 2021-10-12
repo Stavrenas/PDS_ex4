@@ -41,13 +41,14 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
-    multMatrix(A, B, C);
-    sprintf(name, "%s_serial.txt", matrix);
-    saveMatrix(C, name);
-    
-    mask = C;
+    // multMatrix(A, B, C);
+    // sprintf(name, "%s_serial.txt", matrix);
+    // saveMatrix(C, name);
+
+    mask = A;
     multMatrixMasked(A, B, C, mask);
-    printf("Serial mult time : %f\n", toc(start));
+    // printf("Serial mult time : %f\n", toc(start));
+    printf("%lf", toc(start));
 
     sprintf(name, "%s_serialMasked.txt", matrix);
     saveMatrix(C, name);

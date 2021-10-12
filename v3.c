@@ -46,8 +46,8 @@ int main(int argc, char **argv)
     {
         if (argc != 1 && argc != 3)
             printf("Usage: ./v3 matrix_name blocksize %d\n", argc);
-        else
-            printf("\n\n***Multipling %s with a blocksize of %d***\n\n", matrix, blocksize);
+        // else
+            // printf("\n\n***Multipling %s with a blocksize of %d***\n\n", matrix, blocksize);
     }
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
@@ -68,27 +68,28 @@ int main(int argc, char **argv)
     //printf("Blocking time : %f\n", toc(start));
 
     start = tic();
-    C = MPI_Mult(blockA, blockB);
+    // C = MPI_Mult(blockA, blockB);
 
-    if (world_rank == 0)
-    {
-        sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
-        saveMatrix(C, name);
-        printf("Total time : %f\n", toc(start));
+    // if (world_rank == 0)
+    // {
+        // sprintf(name, "%s_blockedMPI_%d.txt", matrix, world_size);
+        // saveMatrix(C, name);
+        // printf("Total time : %f\n", toc(start));
 
-    }
+    // }
 
     MPI_Barrier(MPI_COMM_WORLD); //sync MPI threads
 
     start = tic();
-    blockMatrix(C, blocksize, blockC);
-    C = MPI_MultMasked(blockA, blockB, blockC);
+    // blockMatrix(C, blocksize, blockC);
+    C = MPI_MultMasked(blockA, blockB, blockA);
 
     if (world_rank == 0)
     {
         sprintf(name, "%s_blockedMPI_%dMasked.txt", matrix, world_size);
         saveMatrix(C, name);
-        printf("Total time masked: %f\n", toc(start));
+        // printf("Total time masked: %f\n", toc(start));
+        printf("%lf", toc(start));
     }
 
     MPI_Finalize();

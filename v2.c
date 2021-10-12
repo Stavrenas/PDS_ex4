@@ -56,19 +56,20 @@ int main(int argc, char **argv)
     // printf("Block time : %f\n", toc(start));
 
     start = tic();
-    multBlockedMatrix(blockA, blockA, temp);
-    unblockMatrix(temp,C);
-    sprintf(name, "%s_blocked.txt", matrix);
-    saveMatrix(C, name);
-    blockMask = temp;
+    // multBlockedMatrix(blockA, blockA, temp);
+    // unblockMatrix(temp,C);
+    // sprintf(name, "%s_blocked.txt", matrix);
+    // saveMatrix(C, name);
+    // blockMask = temp;
 
-    multBlockedMatrixMasked(blockA, blockA, blockC, blockMask);
-    printf("Mult time : %f\n", toc(start));
-    start = tic();
+    multBlockedMatrixMasked(blockA, blockA, blockC, blockA);
+    // printf("Mult time : %f\n", toc(start));
+    // start = tic();
 
     unblockMatrix(blockC, C);
-    printf("Unblock time : %f\n", toc(start));
-    printf("Total time : %f\n", toc(total));
+    // printf("Unblock time : %f\n", toc(start));
+    // printf("Total time : %f\n", toc(total));
+    printf("%lf", toc(start));
     sprintf(name, "%s_blockedMasked.txt", matrix);
     saveMatrix(C, name);
 }
