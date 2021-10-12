@@ -46,8 +46,6 @@ int main(int argc, char **argv)
     {
         if (argc != 1 && argc != 3)
             printf("Usage: ./v3 matrix_name blocksize %d\n", argc);
-        else
-            printf("\n\n***Multipling %s with a blocksize of %d***\n\n", matrix, blocksize);
     }
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
@@ -60,6 +58,10 @@ int main(int argc, char **argv)
     readMatrix(filenameB, B);
 
     struct timeval start = tic();
+
+    //temp, only for sustoixia
+    blocksize = A->size / world_size;
+    //temp, only for sustoixia
 
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
