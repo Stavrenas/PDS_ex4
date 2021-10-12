@@ -27,8 +27,6 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    // printf("\n\n***Multipling %s ***\n\n", matrix);
-
     char *filenameA = (char *)malloc(40 * sizeof(char));
     char *filenameB = (char *)malloc(40 * sizeof(char));
     char *name = (char *)malloc(40 * sizeof(char));
@@ -41,14 +39,10 @@ int main(int argc, char **argv)
 
     struct timeval start = tic();
 
-    multMatrix(A, B, C);
-    sprintf(name, "%s_serial.txt", matrix);
-    saveMatrix(C, name);
-    
-    mask = C;
+    mask = A;
     multMatrixMasked(A, B, C, mask);
     printf("Serial mult time : %f\n", toc(start));
 
-    sprintf(name, "%s_serialMasked.txt", matrix);
+    sprintf(name, "%s_serial.txt", matrix);
     saveMatrix(C, name);
 }

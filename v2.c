@@ -36,8 +36,6 @@ int main(int argc, char **argv)
 
     if (argc != 1 && argc != 3)
         printf("Usage: ./v2 matrix_name blocksize\n");
-    // else
-        // printf("\n\n***Multipling %s with a blocksize of %d***\n\n", matrix, blocksize);
 
     char *filenameA = (char *)malloc(40 * sizeof(char));
     char *filenameB = (char *)malloc(40 * sizeof(char));
@@ -50,25 +48,16 @@ int main(int argc, char **argv)
     readMatrix(filenameB, B);
 
     struct timeval start = tic();
-    struct timeval total = tic();
+
     blockMatrix(A, blocksize, blockA);
     blockMatrix(B, blocksize, blockB);
-    // printf("Block time : %f\n", toc(start));
 
-    start = tic();
-    multBlockedMatrix(blockA, blockA, temp);
-    unblockMatrix(temp,C);
-    sprintf(name, "%s_blocked.txt", matrix);
-    saveMatrix(C, name);
-    blockMask = temp;
+    blockMask = blockA;
 
     multBlockedMatrixMasked(blockA, blockA, blockC, blockMask);
-    printf("Mult time : %f\n", toc(start));
-    start = tic();
-
     unblockMatrix(blockC, C);
-    printf("Unblock time : %f\n", toc(start));
-    printf("Total time : %f\n", toc(total));
-    sprintf(name, "%s_blockedMasked.txt", matrix);
+
+    printf("Block mult time : %f\n", toc(start));
+    sprintf(name, "%s_blocked.txt", matrix);
     saveMatrix(C, name);
 }
